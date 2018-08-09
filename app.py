@@ -51,10 +51,18 @@ def _teardown(exception):
     if 'db' in g:
         g.db.close()
 
+#from jump.get_jump_bikes import InfiniteTimer,get_jump_data
+#
+#t = InfiniteTimer(10.0, get_jump_data)
+#t.start()
+#t.start()
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+#from jump.get_jump_bikes import begin_timer
+#begin_timer(app.config['JUMP_REQUEST_SECONDS'])
+#begin_timer(10.0)
+        
+from www.views import home
+app.register_blueprint(home.mod)
 
 from users.views import user, login, role
 app.register_blueprint(user.mod)
@@ -66,6 +74,7 @@ if __name__ == '__main__':
         init_db(get_db())
         get_db().close()
         
+    
     #app.run(host='172.20.10.2', port=5000)
     app.run()
     
