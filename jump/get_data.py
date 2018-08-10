@@ -61,11 +61,25 @@ def get_jump_data():
     #network = 165
     size = app.config['JUMP_REQUEST_SIZE']
     network = app.config['JUMP_NETWORK_ID']
-    url = 'https://app.socialbicycles.com/api/bikes.json?page=1&per_page={}&network_id={}'.format(size,network)
-    username = app.config['JUMP_USERNAME']
-    password = app.config['JUMP_PASSWORD']
     
-    observations = requests.get(url,auth=(username,password)).json()['items']
+    # I now have 2 Jump accounts to use for polling the server, so I can poll more often
+    # if the minutes are odd, or even...
+    
+    if (datetime.now().minute % 2 == 0): #even 
+        row = 0
+    else: #odd
+        row = 1
+        
+    username = app.config['JUMP_LOGIN'][row][0]
+    password = app.config['JUMP_LOGIN'][row][1]
+    
+    url = 'https://app.socialbicycles.com/api/bikes.json?page=1&per_page={}&network_id={}'.format(size,network)
+    request_data = requests.get(url,auth=(username,password)).json()
+    if "error" in request_data: # {"error":"Not Authenticated","code":401}
+        db.close()
+        return "Error received while accessing Jump Data: {}".format(str(request_data))
+    
+    observations = request_data['items']
     
     retrieval_dt = datetime.now()
     day_number = int(retrieval_dt.strftime('%Y%m%d'))
