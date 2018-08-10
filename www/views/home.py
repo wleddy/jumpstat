@@ -74,9 +74,6 @@ def contact():
     
 @mod.route('/robots.txt')
 def robots():
-    #return """User-agent: *
-#Disallow: /"""    
-
     resp = Response("""User-agent: *
 Disallow: /""" )
     resp.headers['content-type'] = 'text/plain'

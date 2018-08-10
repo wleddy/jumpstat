@@ -56,7 +56,7 @@ def get_jump_data():
     eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
     eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
     
-    new_data = {'sighting':0, 'bike': 0, 'trip': 0}
+    new_data = {'sighting':0, 'bike': 0, 'trip': 0, 'available': 0}
     #size=10
     #network = 165
     size = app.config['JUMP_REQUEST_SIZE']
@@ -77,6 +77,8 @@ def get_jump_data():
         new_sighting = False
         sql = 'bike_id = {} and lng = {} and lat = {}'.format(ob['id'],ob['current_position']['coordinates'][0],ob['current_position']['coordinates'][1])
         sight = sighting.select_one(where=sql)
+        new_data['available'] += 1
+        
         if sight != None:
             # update the sighting date
             sight.retrieved = retrieval_dt
