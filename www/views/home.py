@@ -1,5 +1,5 @@
 from flask import request, session, g, redirect, url_for, abort, \
-     render_template, flash, Blueprint
+     render_template, flash, Blueprint, Response
 from users.admin import login_required, table_access_required
 from jump.models import Sighting, Trip, Bike
 from jump.views.jump import current_data
@@ -74,6 +74,11 @@ def contact():
     
 @mod.route('/robots.txt')
 def robots():
-    return """User-agent: *
-Disallow: /"""    
+    #return """User-agent: *
+#Disallow: /"""    
+
+    resp = Response("""User-agent: *
+Disallow: /""" )
+    resp.headers['content-type'] = 'text/plain'
+    return resp
 
