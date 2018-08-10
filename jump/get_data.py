@@ -77,6 +77,17 @@ def get_jump_data():
     request_data = requests.get(url,auth=(username,password)).json()
     if "error" in request_data: # {"error":"Not Authenticated","code":401}
         db.close()
+        from users.mailer import send_message
+        # send an email to admin
+        to_address_list = None
+        sent,msg = send_message(
+            to_address_list,
+            subject="Error Getting Jump Data",
+            body="""An error occured while attempting to import Jump Bike data.
+            Time: {}
+            Error: {}""".format(datetime.now().isoformat(),str(request_data)),
+            )
+        
         return "Error received while accessing Jump Data: {}".format(str(request_data))
     
     observations = request_data['items']
