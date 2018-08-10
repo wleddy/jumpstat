@@ -69,6 +69,9 @@ app.register_blueprint(user.mod)
 app.register_blueprint(login.mod)
 app.register_blueprint(role.mod)
 
+from jump.views import jump
+app.register_blueprint(jump.mod)
+
 if __name__ == '__main__':
     with app.app_context():
         init_db(get_db())

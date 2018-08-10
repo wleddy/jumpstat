@@ -140,6 +140,7 @@ def get_jump_data():
     try:
         db.commit()
         print('At {}; New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['sighting'],new_data['bike'],new_data['trip']))
+        return('At {}; New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['sighting'],new_data['bike'],new_data['trip']))
     
     except Exception as e:
         db.rollback()
