@@ -89,11 +89,11 @@ def get_jump_data():
             # only create a record if the bike has moved
             new_sighting = True
             sight = sighting.new()
-            sight.bike_id = ob['id']
-            sight.bike_name = ob['name']
+            sight.bike_id = ob.get('id',None)
+            sight.bike_name = ob.get('name',None)
             sight.retrieved = retrieval_dt
-            sight.address = ob['address']
-            sight.network_id = ob['network_id']
+            sight.address = ob.get('address',None)
+            sight.network_id = ob.get('network_id',None)
             sight.lng = ob['current_position']['coordinates'][0]
             sight.lat = ob['current_position']['coordinates'][1]
             if sight.lng <= eastern_davis_boundry:
@@ -103,32 +103,32 @@ def get_jump_data():
             else:
                 sight.city = "Sacramento"
                 
-            sight.batt_level = ob['ebike_battery_level']
-            sight.batt_distance = ob['ebike_battery_distance']
-            sight.hub_id = ob['hub_id']
+            sight.batt_level = ob.get('ebike_battery_level',None)
+            sight.batt_distance = ob.get('ebike_battery_distance',None)
+            sight.hub_id = ob.get('hub_id',None)
             sight.day_number = day_number
             sighting.save(sight)
             new_data['sighting'] += 1
             
         #add a bike?
-        bk = bike.select_one(where='bike_id = {}'.format(ob['id']))
+        bk = bike.select_one(where='bike_id = {}'.format(ob.get('id',None)))
         if bk == None:
             bk = bike.new()
-            bk.bike_id = ob['id']
-            bk.name = ob['name']
+            bk.bike_id = ob.get('id',None)
+            bk.name = ob.get('name',None)
             bike.save(bk)
             new_data['bike'] += 1
             
         if new_sighting:
             # record the trip that got us to this location
             ### If we get 2 or more sightings for this bike we can record a trip
-            temp_sight = sighting.select(where='bike_id = {}'.format( ob['id']), order_by='retrieved desc')
+            temp_sight = sighting.select(where='bike_id = {}'.format( ob.get('id',None)), order_by='retrieved desc')
             #import pdb;pdb.set_trace()
             if temp_sight and len(temp_sight) >= 2:
                 trp = trip.new()
-                trp.bike_id = sight.bike_id
-                trp.prev_sighting_id = temp_sight[1].id
-                trp.next_sighting_id = temp_sight[0].id
+                trp.trip_bike_id = sight.bike_id
+                trp.origin_sighting_id = temp_sight[1].id
+                trp.destination_sighting_id = temp_sight[0].id
                 try:
                     trip.save(trp)
                     new_data['trip'] += 1
@@ -139,10 +139,23 @@ def get_jump_data():
         
     try:
         db.commit()
-        print('New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(new_data['sighting'],new_data['bike'],new_data['trip']))
+        print('At {}; New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['sighting'],new_data['bike'],new_data['trip']))
+    
     except Exception as e:
         db.rollback()
         print(e)
+        with app.app_context():
+            from users.mailer import send_message
+            # send an email to admin
+            to_address_list = None
+            sent,msg = send_message(
+                to_address_list,
+                subject="Error Getting Jump Data",
+                body="""An error occured while attempting to import Jump Bike data.
+                Time: {}
+                Error: {}""".format(datetime.now().isoformat(),str(e)),
+                )
+        
 
 
 if __name__ == '__main__':
