@@ -71,4 +71,9 @@ def contact():
     setExits()
     g.name = 'Contact Us'
     return "contact form goes here"
+    
+@mod.route('/robots.txt')
+def robots():
+    return """User-agent: *
+Disallow: /"""    
 
