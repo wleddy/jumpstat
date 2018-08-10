@@ -10,20 +10,6 @@ from datetime import datetime
 from app import app
 from jump.models import Bike, Sighting, Trip, init_tables
 
-db = None
-
-from users.database import Database
-db = Database(working_path + "/" + app.config['DATABASE_PATH']).connect()
-init_tables(db) # creates tables if needed
-
-
-###############################
-# Use the lng to determine what city the bike is in.
-# Sac, west Sac boundry -121.507909
-# Davis, West Sac Boundery -121.618708
-eastern_davis_boundry = -121.618708
-eastern_west_sac_boundry = -121.507909
-
 # Sample request data:
 # {
 #     "current_page": 1,
@@ -60,6 +46,16 @@ def run():
     get_jump_data()
 
 def get_jump_data():
+    from users.database import Database
+    db = Database(working_path + "/" + app.config['DATABASE_PATH']).connect()
+    init_tables(db) # creates tables if needed
+
+    ###############################
+    # Use the lng to determine what city the bike is in.
+    # Crude but simple
+    eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
+    eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
+    
     new_data = {'sighting':0, 'bike': 0, 'trip': 0}
     #size=10
     #network = 165

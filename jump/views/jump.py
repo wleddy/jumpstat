@@ -7,12 +7,14 @@ mod = Blueprint('jump',__name__, template_folder='../templates', url_prefix='/ju
 
 def setExits():
     #g.homeURL = url_for('.home')
-    g.title = 'Jump Data'
+    g.title = 'Jump Data Response'
 
+@mod.route('/get_data')
 @mod.route('/get_data/')
 def get_data():
+    setExits()
     from jump.get_data import get_jump_data
     result = get_jump_data()
-    flash("Jump Data Updated. - " + result)
-    return redirect('/')
+    #flash("Jump Data Updated. - " + result)
+    return render_template('jump_data_response.html', result=result)
     
