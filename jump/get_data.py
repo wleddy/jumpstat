@@ -79,9 +79,8 @@ def get_jump_data():
         db.close()
         from users.mailer import send_message
         # send an email to admin
-        to_address_list = None
         sent,msg = send_message(
-            to_address_list,
+            None,
             subject="Error Getting Jump Data",
             body="""An error occured while attempting to import Jump Bike data.
             Time: {}
@@ -91,7 +90,7 @@ def get_jump_data():
         return "Error received while accessing Jump Data: {}".format(str(request_data))
     
     observations = request_data['items']
-    
+        
     retrieval_dt = datetime.now()
     day_number = int(retrieval_dt.strftime('%Y%m%d'))
     sighting = Sighting(db)
@@ -107,6 +106,7 @@ def get_jump_data():
         if sight != None:
             # update the sighting date
             sight.retrieved = retrieval_dt
+            sight.day_number = day_number
             sighting.save(sight)
         else:
             # only create a record if the bike has moved
