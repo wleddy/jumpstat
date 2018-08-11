@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 from app import app
-from jump.models import Bike, Sighting, Trip, init_tables
+from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 
 # Sample request data:
 # {
@@ -56,7 +56,6 @@ def get_jump_data():
     eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
     eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
     
-    new_data = {'sighting':0, 'bike': 0, 'trip': 0, 'available': 0}
     #size=10
     #network = 165
     size = app.config['JUMP_REQUEST_SIZE']
@@ -75,7 +74,7 @@ def get_jump_data():
     
     url = 'https://app.socialbicycles.com/api/bikes.json?page=1&per_page={}&network_id={}'.format(size,network)
     request_data = requests.get(url,auth=(username,password)).json()
-    if "error" in request_data: # {"error":"Not Authenticated","code":401}
+    if "error" in request_data or 'items' not in request_data: # {"error":"Not Authenticated","code":401}
         db.close()
         from users.mailer import send_message
         # send an email to admin
@@ -96,6 +95,8 @@ def get_jump_data():
     sighting = Sighting(db)
     bike = Bike(db)
     trip = Trip(db)
+    new_data = {'sighting':0, 'bike': 0, 'trip': 0, 'available': 0,}
+    avail_city_data = {}
     
     for ob in observations:        
         new_sighting = False
@@ -103,6 +104,21 @@ def get_jump_data():
         sight = sighting.select_one(where=sql)
         new_data['available'] += 1
         
+        #determine the city for this sighting
+        lng = ob['current_position']['coordinates'][0]
+        lat = ob['current_position']['coordinates'][1]
+        if lng <= eastern_davis_boundry:
+            city = "Davis"
+        elif lng <= eastern_west_sac_boundry:
+            city = "West Sacramento"
+        else:
+            city = "Sacramento"
+        if city in avail_city_data:
+            avail_city_data[city] += 1
+        else:
+            avail_city_data[city] = 1
+            
+            
         if sight != None:
             # update the sighting date
             sight.retrieved = retrieval_dt
@@ -117,14 +133,9 @@ def get_jump_data():
             sight.retrieved = retrieval_dt
             sight.address = ob.get('address',None)
             sight.network_id = ob.get('network_id',None)
-            sight.lng = ob['current_position']['coordinates'][0]
-            sight.lat = ob['current_position']['coordinates'][1]
-            if sight.lng <= eastern_davis_boundry:
-                sight.city = "Davis"
-            elif sight.lng <= eastern_west_sac_boundry:
-                sight.city = "West Sacramento"
-            else:
-                sight.city = "Sacramento"
+            sight.lng = lng
+            sight.lat = lat
+            sight.city = city
                 
             sight.batt_level = ob.get('ebike_battery_level',None)
             sight.batt_distance = ob.get('ebike_battery_distance',None)
@@ -159,11 +170,22 @@ def get_jump_data():
                 except Exception as e:
                     print(trp)
                     print(e)
+                    
+    # record the number of available bikes
+    if new_data['available'] > 0:
+        for city in avail_city_data.keys():
+            avail = AvailableBikeCount(db).new()
+            avail.bikes_available = avail_city_data[city]
+            avail.city = city
+            avail.retrieved = retrieval_dt
+            avail.day_number = day_number
+            AvailableBikeCount(db).save(avail)
         
     try:
         db.commit()
-        print('At {}; New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['sighting'],new_data['bike'],new_data['trip']))
-        return('At {}; New Data added: Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['sighting'],new_data['bike'],new_data['trip']))
+        mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
+        #print(mes)
+        return(mes)
     
     except Exception as e:
         db.rollback()
