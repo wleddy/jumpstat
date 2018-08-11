@@ -16,11 +16,11 @@ def get_data():
     setExits()
     from jump.get_data import get_jump_data
     result = get_jump_data()
-    data = current_data()
+    data = make_data_dict()
     return render_template('jump_data_response.html', result=result, data=data)
     
     
-def current_data(data=None):
+def make_data_dict(data=None):
     """Return a dictionary of Jump Bike Activity"""
     if not data or type(data) is not dict:
         data = {}
@@ -28,7 +28,8 @@ def current_data(data=None):
     data['bikes'] = get_result_count(g.db.execute('select id from bike').fetchall())
     data['sightings'] = get_result_count(g.db.execute('select id from sighting').fetchall())
     data['trips'] = get_result_count(g.db.execute('select id from trip').fetchall())
-    data['available'] = '???'
+    data['available'] = 0
+    data['retrieval_date'] = 'Unknown'
     
     sql = """select count(bike_id) as avail, retrieved from sighting
                 group by retrieved
@@ -38,7 +39,7 @@ def current_data(data=None):
     rec = g.db.execute(sql).fetchall()
     if rec and len(rec) > 0:
         data['available'] = rec[0]['avail']
-    
+        data['retrieval_date'] = str(rec[0]['retrieved'])[:10]
     return data
     
     
