@@ -31,7 +31,7 @@ def make_data_dict(data=None):
     data['available'] = 0
     data['retrieval_date'] = 'Unknown'
     
-    sql = """select count(bike_id) as avail, retrieved from sighting
+    sql = """select count(jump_bike_id) as avail, retrieved from sighting
                 group by retrieved
                 order by retrieved desc
                 limit 1

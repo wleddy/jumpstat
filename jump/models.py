@@ -12,7 +12,7 @@ class Bike(SqliteTable):
         """Define and create the bike table"""
         
         sql = """
-            bike_id NUMBER,
+            jump_bike_id NUMBER,
             name TEXT
             """
         super().create_table(sql)
@@ -33,7 +33,7 @@ class Sighting(SqliteTable):
         """Define and create the sighting table"""
         
         sql = """
-            bike_id NUMBER,
+            jump_bike_id NUMBER,
             bike_name TEXT,
             retrieved DATETIME,
             network_id NUMBER,
@@ -64,7 +64,7 @@ class Trip(SqliteTable):
         """Define and create the trip table"""
 
         sql = """
-            trip_bike_id NUMBER,
+            jump_bike_id NUMBER,
             origin_sighting_id INTEGER,
             destination_sighting_id INTEGER,
             FOREIGN KEY (origin_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE,

@@ -100,7 +100,7 @@ def get_jump_data():
     
     for ob in observations:        
         new_sighting = False
-        sql = 'bike_id = {} and lng = {} and lat = {}'.format(ob['id'],ob['current_position']['coordinates'][0],ob['current_position']['coordinates'][1])
+        sql = 'jump_bike_id = {} and lng = {} and lat = {}'.format(ob['id'],ob['current_position']['coordinates'][0],ob['current_position']['coordinates'][1])
         sight = sighting.select_one(where=sql)
         new_data['available'] += 1
         
@@ -128,7 +128,7 @@ def get_jump_data():
             # only create a record if the bike has moved
             new_sighting = True
             sight = sighting.new()
-            sight.bike_id = ob.get('id',None)
+            sight.jump_bike_id = ob.get('id',None)
             sight.bike_name = ob.get('name',None)
             sight.retrieved = retrieval_dt
             sight.address = ob.get('address',None)
@@ -145,10 +145,10 @@ def get_jump_data():
             new_data['sighting'] += 1
             
         #add a bike?
-        bk = bike.select_one(where='bike_id = {}'.format(ob.get('id',None)))
+        bk = bike.select_one(where='jump_bike_id = {}'.format(ob.get('id',None)))
         if bk == None:
             bk = bike.new()
-            bk.bike_id = ob.get('id',None)
+            bk.jump_bike_id = ob.get('id',None)
             bk.name = ob.get('name',None)
             bike.save(bk)
             new_data['bike'] += 1
@@ -156,11 +156,11 @@ def get_jump_data():
         if new_sighting:
             # record the trip that got us to this location
             ### If we get 2 or more sightings for this bike we can record a trip
-            temp_sight = sighting.select(where='bike_id = {}'.format( ob.get('id',None)), order_by='retrieved desc')
+            temp_sight = sighting.select(where='jump_bike_id = {}'.format( ob.get('id',None)), order_by='retrieved desc')
             #import pdb;pdb.set_trace()
             if temp_sight and len(temp_sight) >= 2:
                 trp = trip.new()
-                trp.trip_bike_id = sight.bike_id
+                trp.jump_bike_id = sight.jump_bike_id
                 trp.origin_sighting_id = temp_sight[1].id
                 trp.destination_sighting_id = temp_sight[0].id
                 try:

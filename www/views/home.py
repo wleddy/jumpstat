@@ -81,7 +81,8 @@ def home():
                     city_dict['avg_bikes_available'] = avg_bikes_available
                     ## Averages should only be divided by the last FULL day
                     day_adjust = 0
-                    
+                    city_trips = 1
+                    city_bikes = 1
                     if datetime.now().day < end_date.day and days_in_month > 2:
                         #get the data for just the full days of this month
                         avg_date = datetime.now().replace(day=datetime.now().day -1)
@@ -139,9 +140,9 @@ def get_date_select_sql():
             -- Bikes observed in city in date range
             (
             select count() from bike
-            where bike_id in 
+            where jump_bike_id in 
                 (
-                select bike_id from sighting where
+                select jump_bike_id from sighting where
                 sighting.retrieved >= '{start_date}' and sighting.retrieved <= '{end_date}' {city_clause}
                 )
             ) as city_bikes, 
