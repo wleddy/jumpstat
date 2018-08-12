@@ -66,11 +66,11 @@ def home():
                 if rec:
                     
                     # Get the median of available bikes for these sightings
-                    avg_bikes_available = '????' #place holder
+                    avg_bikes_available = '- N/A -' #place holder
                     sql = get_available_bikes_sql().format(city_clause=city_clause,start_date=start_date_str,end_date=end_date_str)
                     avail = g.db.execute(sql).fetchall()
                     #import pdb;pdb.set_trace()
-                    if avail:
+                    if avail and current_city != totals_title:
                         avg_bikes_available = int(median([x['bikes_available'] for x in avail ]))
                     
                     
