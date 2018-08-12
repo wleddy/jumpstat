@@ -56,6 +56,9 @@ def get_jump_data():
     eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
     eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
     
+    # Use this to determine if bikes have been off the system too long (getting recharged?)
+    last_sighting_limit = datetime.now().replace(hour=datetime.now().hour-2).isoformat(sep=' ')
+    
     #size=10
     #network = 165
     size = app.config['JUMP_REQUEST_SIZE']
@@ -118,7 +121,6 @@ def get_jump_data():
         else:
             avail_city_data[city] = 1
             
-            
         if sight != None:
             # update the sighting date
             sight.retrieved = retrieval_dt
@@ -155,10 +157,21 @@ def get_jump_data():
             
         if new_sighting:
             # record the trip that got us to this location
-            ### If we get 2 or more sightings for this bike we can record a trip
+            """
+                If we have seen this sighting before AND it was within the last 2 hours
+                just update the sighting date.
+                Otherwise we will assume that this bike has been off somewhere getting
+                Charged / repaired / or possibly redistributed.
+                I don't know how long a bike will be off line during redisribution. It could
+                happen quicker than 2 hours but I suspect they would just drop a recharged bike
+                where it's needed and any "excess" bikes with low charge would go back for recharge
+            """
+            # last_sighting_limit = datetime.now().replace(hour=datetime.now().hour-2).isoformat(sep=' ')
+            
+            ### If we get 2 or more sightings for this bike we can record a trip and
+            ### it was not over the time limit, record a new trip
             temp_sight = sighting.select(where='jump_bike_id = {}'.format( ob.get('id',None)), order_by='retrieved desc')
-            #import pdb;pdb.set_trace()
-            if temp_sight and len(temp_sight) >= 2:
+            if temp_sight and len(temp_sight) >= 2 and temp_sight[1].retrieved > last_sighting_limit :
                 trp = trip.new()
                 trp.jump_bike_id = sight.jump_bike_id
                 trp.origin_sighting_id = temp_sight[1].id
