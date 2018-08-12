@@ -67,9 +67,8 @@ class Trip(SqliteTable):
             trip_bike_id NUMBER,
             origin_sighting_id INTEGER,
             destination_sighting_id INTEGER
-            --FOREIGN KEY (trip_bike_id) REFERENCES sighting(bike_id) ON DELETE CASCADE,
-            --FOREIGN KEY (origin_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE,
-            --FOREIGN KEY (destination_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE
+            FOREIGN KEY (origin_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE,
+            FOREIGN KEY (destination_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE
             """
         super().create_table(sql)
 

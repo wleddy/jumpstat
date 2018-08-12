@@ -39,7 +39,7 @@ def make_data_dict(data=None):
     rec = g.db.execute(sql).fetchall()
     if rec and len(rec) > 0:
         data['available'] = rec[0]['avail']
-        data['retrieval_date'] = str(rec[0]['retrieved'])[:10]
+        data['retrieval_date'] = str(rec[0]['retrieved'])[:16]
     return data
     
     

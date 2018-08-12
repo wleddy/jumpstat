@@ -5,6 +5,7 @@ from jump.models import Sighting, Trip, Bike
 from jump.views import jump
 from datetime import datetime
 import calendar
+from statistics import median
 
 mod = Blueprint('www',__name__, template_folder='../templates', url_prefix='')
 
@@ -28,12 +29,11 @@ def home():
     cities = ['Davis','Sacramento','West Sacramento',totals_title]
     
     #for this month and last month
-    #import pdb;pdb.set_trace()
     for x in range(0,2):
-        now = now.replace(month=now.month - x)
+        now = datetime.now().replace(month=datetime.now().month - x)
         dr = calendar.monthrange(now.year,now.month) # -> `(first day_number, number of last day)`
         start_date = now.replace(day=1)
-        month_name = start_date.strftime('%B / %Y') # Month Name / Year
+        month_name = start_date.strftime('%B %Y') # Month Name / Year
         end_date = now.replace(day=dr[1]) # last day of month
         start_date_str = start_date.strftime('%Y-%m-%d')
         end_date_str = end_date.strftime('%Y-%m-%d')
@@ -64,7 +64,15 @@ def home():
     
                 rec = g.db.execute(sql).fetchone()
                 if rec:
-                    avg_bikes_available = '????' #rec['city_bikes'] #place holder
+                    
+                    # Get the median of available bikes for these sightings
+                    avg_bikes_available = '????' #place holder
+                    sql = get_available_bikes_sql().format(city_clause=city_clause,start_date=start_date_str,end_date=end_date_str)
+                    avail = g.db.execute(sql).fetchall()
+                    #import pdb;pdb.set_trace()
+                    if avail:
+                        avg_bikes_available = int(median([x['bikes_available'] for x in avail ]))
+                    
                     
                     city_dict = {}
                     city_dict['city'] = current_city
@@ -72,13 +80,27 @@ def home():
                     city_dict['city_trips'] = rec['city_trips']
                     city_dict['avg_bikes_available'] = avg_bikes_available
                     ## Averages should only be divided by the last FULL day
-                    day_adjust = 1
-                    if days_in_month < 2:
-                        day_adjust = 0
-                    city_dict['trips_per_day'] = round(rec['city_trips'] / days_in_month - day_adjust, 4)
+                    day_adjust = 0
+                    
+                    if datetime.now().day < end_date.day and days_in_month > 2:
+                        #get the data for just the full days of this month
+                        avg_date = datetime.now().replace(day=datetime.now().day -1)
+                        avg_end_date_str = avg_date.strftime('%Y-%m-%d')
+                        sql = get_date_select_sql().format(city_clause=city_clause,start_date=start_date_str,end_date=avg_end_date_str)
+                        avg_rec = g.db.execute(sql).fetchone()
+                        if avg_rec:
+                            city_trips = avg_rec['city_trips']
+                            city_bikes = avg_rec['city_bikes']
+                            day_adjust = 1
+                        else:
+                            city_trips = rec['city_trips']
+                            city_bikes = rec['city_bikes']
+                            day_adjust = 0
+                    
+                    city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_in_month - day_adjust), 2)) 
                     city_dict['trips_per_bike_per_day'] = 'N/A'
-                    if rec['city_bikes'] > 0:
-                        city_dict['trips_per_bike_per_day'] = round(rec['city_trips'] / rec['city_bikes'] / days_in_month - day_adjust, 4)
+                    if city_bikes > 0:
+                        city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_in_month - day_adjust) / city_bikes), 2))
                     
                     monthly_data['cities'].append(city_dict)
                     
@@ -86,7 +108,7 @@ def home():
     
     summary_data = jump.make_data_dict()
     #import pdb;pdb.set_trace()
-    print(report_data)
+
     return render_template('index.html',data=summary_data,report_data=report_data)
 
 @mod.route('/about')
@@ -136,4 +158,9 @@ def get_date_select_sql():
     """
     
 def get_city_clause_sql():
-    return """ and sighting.city = '{city}'"""
+    return """ and city = '{city}'"""
+    
+def get_available_bikes_sql():
+    return """select bikes_available from available_bike_count
+where retrieved >= '{start_date}' and retrieved <= '{end_date}' {city_clause}
+"""
