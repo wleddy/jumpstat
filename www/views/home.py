@@ -81,8 +81,6 @@ def home():
                     city_dict['avg_bikes_available'] = avg_bikes_available
                     ## Averages should only be divided by the last FULL day
                     day_adjust = 0
-                    city_trips = 1
-                    city_bikes = 1
                     if datetime.now().day < end_date.day and days_in_month > 2:
                         #get the data for just the full days of this month
                         avg_date = datetime.now().replace(day=datetime.now().day -1)
@@ -97,8 +95,13 @@ def home():
                             city_trips = rec['city_trips']
                             city_bikes = rec['city_bikes']
                             day_adjust = 0
-                    
-                    city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_in_month - day_adjust), 2)) 
+                    else:
+                        # to avoid divide by zero error
+                        # This should only happen during the first day of data collection
+                        city_trips = 1
+                        city_bikes = 1
+                        
+                        city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_in_month - day_adjust), 2)) 
                     city_dict['trips_per_bike_per_day'] = 'N/A'
                     if city_bikes > 0:
                         city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_in_month - day_adjust) / city_bikes), 2))
