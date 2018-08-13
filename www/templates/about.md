@@ -48,7 +48,11 @@ to find any that we haven't seen in a few weeks and remove them from our list.
 #### How is a Trip identified
 
 Pretty simple really. The first time we see a bike we make a note of it. The next time we see it in a different location
-we count that as a trip.
+we count that as a trip. 
+
+In order to avoid small variations in the location reporting, Longitude and Latitude as reported by the 
+bike are rounded to 3 decimal places when comparing subsequent sightings. That is a distance of about a 
+half a block in our region.
 
 If it's been more than 2 hours since the last time we saw the bike we assume it has been off at the Bike Spa getting
 pampered and rejuvenated for another day or two of service. Heaven knows they need it. The way some people behave is just 
