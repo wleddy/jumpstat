@@ -27,7 +27,7 @@ class Sighting(SqliteTable):
         super().__init__(db_connection)
         self.table_name = 'sighting'
         self.order_by_col = 'id'
-        self.defaults = {}
+        self.defaults = {'returned_to_service':0,}
         
     def create_table(self):
         """Define and create the sighting table"""
@@ -44,7 +44,8 @@ class Sighting(SqliteTable):
             batt_level NUMBER,
             batt_distance NUMBER,
             hub_id NUMBER,
-            day_number NUMBER
+            day_number NUMBER,
+            returned_to_service INT DEFAULT 0
             """
         super().create_table(sql)
         
