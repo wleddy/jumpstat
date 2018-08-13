@@ -56,11 +56,12 @@ def contact():
             context['email'] = request.form['email']
             context['comment'] = request.form['comment']
             context['date'] = datetime.now().isoformat(sep=" ")
+            print(context)
             send_message(
                 None,
                 subject = "Comment from {}".format(app.config['SITE_NAME']),
                 html_template = "home/email/contact_email.html",
-                context = request.form,
+                context = context,
                 reply_to = request.form['email'],
             )
         
