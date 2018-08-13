@@ -6,7 +6,7 @@
 {{ rendered_html | safe() }}
 {% endif %}
 
-<div id="summary_data" style="background-color:#ddd;width:220pt;padding:10pt;margin-top:10pt;">
+<div id="summary_data" style="border: 3pt solid #ddd;width:220pt;padding:10pt;margin-top:10pt;">
     <h4 style="margin-bottom:6pt;">Summary Report:</h4>
     <p class="caption" style="font-style:italic;font-size:90%;">(Latest data retrieval: {{data.retrieval_date}})</p>
     <p>Total Bikes: {{ data.bikes }}</p>
