@@ -121,10 +121,8 @@ def get_report_data():
         end_date_str = end_date.strftime('%Y-%m-%d')
 
         # First test is there are any sightings for this month
-        rec = g.db.execute('select min(retrieved) as first, max(retrieved) as last from sighting where retrieved >= "{start_date}" and retrieved <= "{end_date}"'.format(start_date=start_date_str,end_date=end_date_str)).fetchone()
-        
         #import pdb;pdb.set_trace()
-        
+        rec = g.db.execute('select min(retrieved) as first, max(retrieved) as last from sighting where retrieved >= "{start_date}" and retrieved <= "{end_date}"'.format(start_date=start_date_str,end_date=end_date_str)).fetchone()
         if rec and rec['first'] != None and rec['last'] != None:
             # Get the number of days in this date range
             days_in_month = int(rec['last'][8:10]) - (int(rec['first'][8:10])) + 1
@@ -138,11 +136,11 @@ def get_report_data():
             # Get bikes and trips observed for all cities
             for current_city in cities:
                 if current_city != totals_title:
-                    city_clause = get_city_clause_sql().format(city=current_city)
+                    city_clause = get_sql_for_city_clause().format(city=current_city)
                 else:
                     city_clause = ''
                 
-                sql = get_date_select_sql().format(city_clause=city_clause,start_date=start_date_str,end_date=end_date_str)
+                sql = get_sql_for_bikes_and_trips().format(city_clause=city_clause,start_date=start_date_str,end_date=end_date_str)
     
                 rec = g.db.execute(sql).fetchone()
                 if rec:
@@ -161,13 +159,20 @@ def get_report_data():
                     city_dict['city_bikes'] = rec['city_bikes']
                     city_dict['city_trips'] = rec['city_trips']
                     city_dict['avg_bikes_available'] = avg_bikes_available
-                    ## Averages should only be divided by the last FULL day
+                    """ 
+                        Averages should only be divided by the number of FULL days.
+                    
+                        If it's not the last day of the month we are currently processing
+                        then we need to get the counts for just the full days of this month.
+                        
+                    """
+                    #import pdb;pdb.set_trace()
                     day_adjust = 0
-                    if datetime.now().day < end_date.day and days_in_month > 2:
+                    if datetime.now().day < end_date.day and days_in_month >= 2:
                         #get the data for just the full days of this month
                         avg_date = datetime.now().replace(day=datetime.now().day -1)
                         avg_end_date_str = avg_date.strftime('%Y-%m-%d')
-                        sql = get_date_select_sql().format(city_clause=city_clause,start_date=start_date_str,end_date=avg_end_date_str)
+                        sql = get_sql_for_bikes_and_trips().format(city_clause=city_clause,start_date=start_date_str,end_date=avg_end_date_str)
                         avg_rec = g.db.execute(sql).fetchone()
                         if avg_rec:
                             city_trips = avg_rec['city_trips']
@@ -180,12 +185,11 @@ def get_report_data():
                     else:
                         # to avoid divide by zero error
                         # This should only happen during the first day of data collection
-                        city_trips = 1
-                        city_bikes = 1
-                        
+                        city_dict['trips_per_day'] = 'N/A'
+                        city_dict['trips_per_bike_per_day'] = 'N/A'
+                    
+                    if days_in_month >= 2:
                         city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_in_month - day_adjust), 2)) 
-                    city_dict['trips_per_bike_per_day'] = 'N/A'
-                    if city_bikes > 0:
                         city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_in_month - day_adjust) / city_bikes), 2))
                     
                     monthly_data['cities'].append(city_dict)
@@ -194,7 +198,7 @@ def get_report_data():
     
     return report_data
     
-def get_date_select_sql():
+def get_sql_for_bikes_and_trips():
     return """-- Get the total bikes and total trip for each city
         select 
             -- Bikes observed in city in date range
@@ -203,7 +207,7 @@ def get_date_select_sql():
             where jump_bike_id in 
                 (
                 select jump_bike_id from sighting where
-                sighting.retrieved >= '{start_date}' and sighting.retrieved <= '{end_date}' {city_clause}
+                sighting.retrieved >= '{start_date} 00:00:00' and sighting.retrieved <= '{end_date} 23:59:59' {city_clause}
                 )
             ) as city_bikes, 
             -- Trips observed in city in date range
@@ -212,13 +216,13 @@ def get_date_select_sql():
             where trip.destination_sighting_id in 
                 (
                 select id from sighting where
-                sighting.retrieved >= '{start_date}' and sighting.retrieved <= '{end_date}' {city_clause}
+                sighting.retrieved >= '{start_date} 00:00:00' and sighting.retrieved <= '{end_date} 23:59:59' {city_clause}
                 )
             ) as city_trips
         from bike limit 1;
     """
     
-def get_city_clause_sql():
+def get_sql_for_city_clause():
     return """ and city = '{city}'"""
     
 def get_available_bikes_sql():
