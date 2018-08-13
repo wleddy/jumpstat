@@ -99,13 +99,14 @@ def get_jump_data():
     
         for ob in observations:        
             new_sighting = False
-            sql = 'jump_bike_id = {} and lng = {} and lat = {}'.format(ob['id'],ob['current_position']['coordinates'][0],ob['current_position']['coordinates'][1])
+            lng = ob['current_position']['coordinates'][0]
+            lat = ob['current_position']['coordinates'][1]
+            # round the locattion down to avoid seeing very small reporting differences look like a trip
+            sql = 'jump_bike_id = {} and ROUND(lng,3) = ROUND({},3) and ROUND(lat,3) = ROUND({},3)'.format(ob['id'],lng,lat)
             sight = sighting.select_one(where=sql)
             new_data['available'] += 1
         
             #determine the city for this sighting
-            lng = ob['current_position']['coordinates'][0]
-            lat = ob['current_position']['coordinates'][1]
             if lng <= eastern_davis_boundry:
                 city = "Davis"
             elif lng <= eastern_west_sac_boundry:
