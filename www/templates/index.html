@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}{{ g.title }}{% endblock %}
 {% block body %}
 
-<h2>Jump Bike Data for Sacramento</h2>
-
-<p>This site is a hobby project I created just to see what is happening with the Jump Bike system in the Sacramento area</p>
-<p>The information is updated every few minutes using data provided by Jump through the Jump Bike developer API which is documented <a href="https://app.socialbicycles.com/developer/">here</a>.</p>
-<p>I'm really just getting started on this and the data collection only began today, August, 10 2018. I have plans for more detailed reporting soon.</p>
+{% if rendered_html %}
+{{ rendered_html | safe() }}
+{% endif %}
 
 <div id="summary_data" style="background-color:#ddd;width:220pt;padding:10pt;margin-top:10pt;">
     <h4 style="margin-bottom:6pt;">Summary Report:</h4>

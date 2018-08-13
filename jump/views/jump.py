@@ -10,8 +10,8 @@ def setExits():
     #g.homeURL = url_for('.home')
     g.title = 'Jump Data Response'
 
-@mod.route('/get_data')
-@mod.route('/get_data/')
+@mod.route('/get_data', methods=['GET',])
+@mod.route('/get_data/', methods=['GET',])
 def get_data():
     setExits()
     from jump.get_data import get_jump_data
