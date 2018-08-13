@@ -10,7 +10,7 @@ Fortunately for us, Jump Bikes kindly provides a way to ask their computers just
 What you can find out is where any available bikes are at just the moment that you ask. In order to answer our
 questions we have to constantly pester Jump's computer and then we compile the information we get back into a database.
 
-With the database we can figure out things like how many bikes actually operate in the area how many trips they take and
+With the database we can figure out things like how many bikes actually operate in the area, how many trips they take and
 even (using some guesswork, a Magic 8 Ball and a Ouija board) when they go in for recharge or service.
 
 __DONT PANIC!__ We are not tracking you. (But Jump Bike is, just sayin') We don't know who rides a bike or where they
@@ -31,7 +31,7 @@ you see when you use the Jump Bikes app or web site. Just way less pretty.
 
 #### Data retrieval
 
-So that we not become a total pain, Jump requests that we send a limited number of request each day. We just about max out our
+So that we don't become a total pain, Jump requests that we send a limited number of requests each day. We just about max out our
 ration by making a request about every 9 minutes. So our data should be at worst 8 and a half minutes old.
 
 #### What is an Available Bike
