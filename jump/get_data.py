@@ -43,7 +43,7 @@ from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 
 def run():
     """Fetch and compile data from Jump"""
-    get_jump_data()
+    print(get_jump_data())
 
 def get_jump_data():
     try:
@@ -163,7 +163,7 @@ def get_jump_data():
                     where it's needed and any "excess" bikes with low charge would go back for recharge
                 
                     If a we determine that a bike has re-appeared on the net after being serviceed, 
-                    mark 'returned_to_service' as i in the newer sighting record
+                    mark 'returned_to_service' as i in the just created sighting record
                 """
                 # last_sighting_limit = datetime.now().replace(hour=datetime.now().hour-2).isoformat(sep=' ')
             
@@ -181,9 +181,10 @@ def get_jump_data():
                         new_data['trip'] += 1
                          
                     else:
-                        # Update the service data for the previous sighting
-                        temp_sight[1].returned_to_service = 1
-                        sighting.save(temp_sight[1])
+                        # Update the service data for the newly created sighting
+                        #import pdb;pdb.set_trace()
+                        sight.returned_to_service = 1
+                        sighting.save(sight)
                     
         # record the number of available bikes
         if new_data['available'] > 0:
