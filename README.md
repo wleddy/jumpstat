@@ -15,20 +15,20 @@ you probably want to do is clone users into your new flask app. See "Instruction
 
 A typical installation would be to:
 
-    * clone this project into your development machine
-    
-    * in the terminal run `. setup_env` This will create the instance directory where your private
-      stuff is stored and will try to create virtualenv directory 'env' and pip the requirements into it.
-      
-    * cd into the directory and clone the 'users' repo into it
+* clone this project into your development machine
 
-    * Assuming everything went Ok, run `. activate_env` to enter your virtual environment.
-    
-    * Next, edit the file at `instance/site_settings.py` with all your secrets.
-    
-    * run python app.py to start the dev server and create the inital database.
-    
-    * A super user account is created with username "admin" and password "password"
+* in the terminal run `. setup_env` This will create the instance directory where your private
+  stuff is stored and will try to create virtualenv directory 'env' and pip the requirements into it.
+  
+* cd into the directory and clone the 'users' repo into it
+
+* Assuming everything went Ok, run `. activate_env` to enter your virtual environment.
+
+* Next, edit the file at `instance/site_settings.py` with all your secrets.
+
+* run python app.py to start the dev server and create the inital database.
+
+* A super user account is created with username "admin" and password "password"
     
 See below for information on getting data from Jump.
     
@@ -72,12 +72,12 @@ credentials to get the data.
 
 ##### Required packages:
 
-    * python 3.6 (ish)
-    
-    * Flask and it's default dependencies, of course
-    
-    * Flask-mail
-    
-    * mistuse for Markdown support
-    
-    * pytest
+* python 3.6 (ish)
+
+* Flask and it's default dependencies, of course
+
+* Flask-mail
+
+* mistuse for Markdown support
+
+* pytest
