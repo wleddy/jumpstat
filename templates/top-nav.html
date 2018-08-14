@@ -1,6 +1,4 @@
 <div id="nav">
-    {% if g.user %}
-    {% endif %}
         <p id="mobile-menu-header" class="menu-item dropdown" onclick="" >Menu</p>
         <div id="mobile-menu-contain">
             <div>
@@ -8,6 +6,7 @@
                 <p class="menu-item" ><a href="/about/">About</a></p>
                 <p class="menu-item" ><a href="/contact/">Contact Us</a></p>
             </div>
+    {% if g.user %}
             <div onclick="" id="profile-menu" class="dropdown">
                 <p class="dd-menu-header">
                     {% if g.user %}My Profile{% else %}<a href="{{ url_for('login.login')}}" >Login</a>{% endif %}
@@ -29,6 +28,7 @@
                     </ul>
                 </div>
             </div>
+    {% endif %}
         </div>
         <p class="clear"></p>
 </div>
