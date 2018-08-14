@@ -75,7 +75,14 @@ app.register_blueprint(jump.mod)
 if __name__ == '__main__':
     with app.app_context():
         init_db(get_db())
+        
+        # create the jump tables
+        from jump.models import init_tables
+        init_tables(get_db())
+        
         get_db().close()
+        
+        
         
     
     #app.run(host='172.20.10.2', port=5000)
