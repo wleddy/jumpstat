@@ -6,7 +6,7 @@ sys.path.append(working_path) ##get import to look one level up
 
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from users.utils import printException
@@ -59,8 +59,9 @@ def get_jump_data():
         eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
     
         # Use this to determine if bikes have been off the system too long (getting recharged?)
-        last_sighting_limit = datetime.now().replace(hour=datetime.now().hour-2).isoformat(sep=' ')
-    
+        
+        last_sighting_limit = (datetime.now() - timedelta(hours=2)).isoformat(sep=' ')
+
         #size=10
         #network = 165
         size = app.config['JUMP_REQUEST_SIZE']
@@ -205,11 +206,21 @@ def get_jump_data():
         return(mes)
     
     except Exception as e:
-        if db:
-            db.rollback()
+        try:
+            if db:
+                db.rollback()
+        except Exception as e:
+            mes = """Could not connect to db while attempting to import Jump Bike data.
+                    Error: {}
+                    """.format(str(e))
+            mes = printException(mes,"error",e)
+            alert_admin(mes)
+            return mes
+            
+            
         mes = """An error occured while attempting to import Jump Bike data.
-                Time: {}
-                Error: {}""".format(datetime.now().isoformat(sep=' '),str(e))
+                Error: {}
+                """.format(str(e))
         mes = printException(mes,"error",e)
                 
         alert_admin(mes)
