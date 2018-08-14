@@ -8,7 +8,7 @@ manage users and roles to control access to your app.
 By default, the main program file is app.py. App.py expects there to be a python package called 'users' and out-of-the-box 
 won't run without it.
 
-The 'users' package is it's own [repository on github](https://github.com/wleddy/users/). All of the database functionality (sqlite3) is in users so the first thing
+The 'users' package is it's own [repository on GitHub](https://github.com/wleddy/users/). All of the database functionality (sqlite3) is in users so the first thing
 you probably want to do is clone users into your new flask app. See "Instructions" below.
 
 ## Instructions 
@@ -26,7 +26,7 @@ A typical installation would be to:
 
 * Next, edit the file at `instance/site_settings.py` with all your secrets.
 
-* run python app.py to start the dev server and create the inital database.
+* run python app.py to start the dev server and create the initial database.
 
 * A super user account is created with username "admin" and password "password"
     
@@ -63,7 +63,7 @@ Go back to the Python Setup App panel and restart your app or from the terminal 
 ### Getting data from Jump
 
 The method at jump.get_data.get_data needs to be called periodically to download the data from Jump. You can do this from 
-a browser by going to /jump/get_data/. I set up a cron job using curl to periodicaly do that in the background. I use:
+a browser by going to /jump/get_data/. I set up a cron job using curl to periodically do that in the background. I use:
 
 `curl -u "< Your email >:< your password >" "https://app.socialbicycles.com/api/bikes.json?page=1&per_page=1000&network_id=165"`
 
