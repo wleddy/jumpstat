@@ -5,8 +5,91 @@
 {% if rendered_html %}
 {{ rendered_html | safe() }}
 {% endif %}
+<style>
+    #summary_data {
+        border: 3pt solid #ddd;
+        width:20em;
+        padding:10pt;
+        margin-top:10pt;"
+    }
+    .num {
+        text-align:right;
+    }
+    th {
+        font-weight:800;
+        background-color:#ddd;
+        max-width:8em;
+    }
+    .city_column_2, .city_column {
+        min-width:10em;
+        max-width:10em;
+    }
+    .num {
+        min-width:5em;
+        max-width:5em;
+    }
+    th.city_column_2, th.city_column, th.label_column {
+        height:2.2em;
+    }
+    /* for desktop  */
 
-<div id="summary_data" style="border: 3pt solid #ddd;width:220pt;padding:10pt;margin-top:10pt;">
+   div#monthly_data table { 
+        padding:0pt;
+    }
+
+    .city_column_2{ 
+        display:none;
+    }
+
+    div#monthly_data table {
+        display:inline;
+    }
+
+    #table_2 {
+        position:relative;
+        left:-5pt;
+    }
+    #table_3 {
+        position:relative;
+        left:-10pt;
+    }
+    #table_4 {
+        position:relative;
+        left:-15pt;
+    }
+    #table_5 {
+        position:relative;
+        left:-20pt;
+    }
+
+    /* For Mobile   */
+
+    @media only screen 
+      and (min-device-width: 375px) 
+      and (max-device-width: 667px) 
+      and (-webkit-min-device-pixel-ratio: 2)  {
+        #summary_data {
+          width:18em;
+        }
+        div#monthly_data table {
+            margin:2em, 0;
+        }
+        .city_column_2{ 
+            display:block;
+        }
+
+        div#monthly_data table {
+            display:block;
+            margin:10pt 0;
+
+        }
+        #table_2, #table_3, #table_4, #table_5 {
+            position:static;
+        }
+    }
+</style>
+
+<div id="summary_data" >
     <h4 style="margin-bottom:6pt;">Summary Report:</h4>
     <p class="caption" style="font-style:italic;font-size:90%;">(Latest data retrieval: {{data.retrieval_date}})</p>
     <p>Total Bikes: {{ data.bikes }}</p>
@@ -15,50 +98,81 @@
 </div>
 
 <div id="monthly_data">
-    <style>
-        .num {
-            text-align:right;
-        }
-        .city_name {
-            font-weight:800;
-            min-width:120pt;
-        }
-        th {
-            font-weight:800;
-            background-color:#ddd;
-            max-width:80pt;
-        }
-        
-    </style>
     {% if report_data %}
         <h3>Monthly Report</h3>
         {% for month in report_data %}
         <h4>Data for {{ month['month_name']}}</h4>
-        <table>
-            <tr>
-                <th>City</th>
-                <th>Bikes Observed</th>
-                <th>Trips Taken</th>
-                <th>Median Bikes Available</th>
-                <th>Avg. Trips per Day</th>
-                <th>Avg. Trips per Bike per Day</th>
-            </tr>
-            {% for city in month['cities'] %}
-            <tr>
-                <td class="city_name">{{ city['city'] }}</td>
-                <td class="num">{{ city['city_bikes'] }}</td>
-                <td class="num">{{ city['city_trips'] }}</td>
-                <td class="num">{{ city['avg_bikes_available'] }}</td>
-                <td class="num">{{ city['trips_per_day'] }}</td>
-                <td class="num">{{ city['trips_per_bike_per_day'] }}</td>
-            </tr>
-            {% endfor %}
+
+        <div id="monthly_data">    
+            <table id="table_1">
+                <tr>
+                    <th class="city_column">City</th>
+                    <th class="label_column">Bikes Observed</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column">{{ city['city'] }}</td>
+                    <td class="num">{{ city['city_bikes'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_2">
+                <tr>
+                    <th class="city_column_2 ">City</th>
+                    <th class="label_column">Trips Taken</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['city_trips'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_3">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Median Bikes Available</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['avg_bikes_available'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_4">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Trips per day</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['trips_per_day'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_5">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Trips per day per bike</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['trips_per_bike_per_day'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            
         {% endfor %}
-        </table>
+        </div>
+        <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
+            * Network Wide counts may not equal the total of all 
+            city counts because some trips end in a city other than the one they started in.
+        </p>
+    {% else %}
+    <h3>Sorry, there is no data to display</h3>
     {% endif %}
-    <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
-        * Network Wide counts may not equal the total of all 
-        city counts because some trips end in a city other than the one they started in.
-    </p>
 </div>
 {% endblock body %}
