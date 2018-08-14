@@ -45,7 +45,8 @@ class Sighting(SqliteTable):
             batt_distance NUMBER,
             hub_id NUMBER,
             day_number NUMBER,
-            returned_to_service INT DEFAULT 0
+            returned_to_service INT DEFAULT 0,
+            stighted DATETIME
             """
         super().create_table(sql)
         

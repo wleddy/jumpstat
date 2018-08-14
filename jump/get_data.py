@@ -130,6 +130,7 @@ def get_jump_data():
                 sight.jump_bike_id = ob.get('id',None)
                 sight.bike_name = ob.get('name',None)
                 sight.retrieved = retrieval_dt
+                sight.sighted = retrieval_dt
                 sight.address = ob.get('address',None)
                 sight.network_id = ob.get('network_id',None)
                 sight.lng = lng
