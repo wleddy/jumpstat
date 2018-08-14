@@ -63,3 +63,8 @@ shameless.
 If you have any questions or some suggestions of some other information about the life of bikes, please feel free to 
 [contact us](/contact/ "contact us").
 
+#### About this project
+
+This site was written mostly in Python using the Flask framework. It's open source and you can get your very own copy at
+[Github]( https://github.com/wleddy/jumpstat/ ). (So now I suppose I'll have to finish the readme file.)
+

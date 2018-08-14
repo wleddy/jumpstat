@@ -347,3 +347,13 @@ p.dd-menu-divider {
 /* end Dropdown menus */
 
 /* End Navigation styles */
+
+div#footer {
+    margin-top:2em;
+    padding-top:1em;
+    border-top:4pt solid #ddd;
+    
+}
+div#footer > p {
+    font-size:80%;
+}
