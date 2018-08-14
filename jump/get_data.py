@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
+from users.utils import printException
 
 # Sample request data:
 # {
@@ -208,7 +209,9 @@ def get_jump_data():
             db.rollback()
         mes = """An error occured while attempting to import Jump Bike data.
                 Time: {}
-                Error: {}""".format(datetime.now().isoformat(),str(e))
+                Error: {}""".format(datetime.now().isoformat(sep=' '),str(e))
+        mes = printException(mes,"error",e)
+                
         alert_admin(mes)
         return mes
         
