@@ -197,7 +197,7 @@ def get_jump_data():
                 """
                 if "bonuses" in ob and type(ob['bonuses']) is list:
                     for bonus in ob['bonuses']:
-                        if bonus: # bonus is a non-empty dict
+                        if bonus: # bonus is a dict
                             #import pdb;pdb.set_trace()
                             # Round-trip the text to list to text
                             if sight.bonuses == None:
@@ -209,7 +209,8 @@ def get_jump_data():
                             else:
                                 bonus_list = ast.literal_eval(sight.bonuses)
                                 for prev_bonus in bonus_list:
-                                    if prev_bonus['type'] != bonus['type']:
+                                    if 'type' in prev_bonus and 'type' in bonus and \
+                                      prev_bonus['type'] != bonus['type']:
                                         #add a new bonus type
                                         bonus_dict = bonus
                                         bonus_dict['retrieved'] = sight.retrieved
@@ -217,6 +218,11 @@ def get_jump_data():
                                         
                             sight.bonuses = str(bonus_list)
                             sighting.save(sight)
+                        else:
+                            if sight.bonuses != None:
+                                # bonus is no longer on offer
+                                sight.bonuses = None
+                                sighting.save(sight)
                     
         # record the number of available bikes
         if new_data['available'] > 0:
