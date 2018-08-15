@@ -49,6 +49,7 @@ def run():
 
 def get_jump_data():
     try:
+        mes = 'No message Yet...'
         from users.database import Database
         db = Database(working_path + "/" + app.config['DATABASE_PATH']).connect()
         init_tables(db) # creates tables if needed
@@ -196,16 +197,25 @@ def get_jump_data():
                 """
                 if "bonuses" in ob and type(ob['bonuses']) is list:
                     for bonus in ob['bonuses']:
-                        if bonus:
+                        if bonus: # bonus is a non-empty dict
                             #import pdb;pdb.set_trace()
+                            # Round-trip the text to list to text
                             if sight.bonuses == None:
-                                sight.bonuses = '[' + str(bonus) + ']' # make it look like a list of dicts
+                                bonus_list = []
+                                bonus_dict = bonus
+                                bonus_dict['retrieved'] = sight.retrieved
+                                bonus_list.append(bonus_dict)
+                               
                             else:
-                                if sight.bonuses != '[' + str(bonuses) +']':
-                                    # Round-trip the text to list to text
-                                    bonus_list = ast.literal_eval(sight.bonuses)
-                                    bonus_list.append(ast.literal_eval(bonus))
-                                    sight.bonuses = str(bonus_list)
+                                bonus_list = ast.literal_eval(sight.bonuses)
+                                for prev_bonus in bonus_list:
+                                    if prev_bonus['type'] != bonus['type']:
+                                        #add a new bonus type
+                                        bonus_dict = bonus
+                                        bonus_dict['retrieved'] = sight.retrieved
+                                        bonus_list.append(bonus_dict)
+                                        
+                            sight.bonuses = str(bonus_list)
                             sighting.save(sight)
                     
         # record the number of available bikes
