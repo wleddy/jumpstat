@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from users.utils import printException
+import ast
 
 # Sample request data:
 # {
@@ -189,6 +190,23 @@ def get_jump_data():
                         #import pdb;pdb.set_trace()
                         sight.returned_to_service = 1
                         sighting.save(sight)
+                        
+                """
+                Add any bonuses that have been granted to this bike
+                """
+                if "bonuses" in ob and type(ob['bonuses']) is list:
+                    for bonus in ob['bonuses']:
+                        if bonus:
+                            #import pdb;pdb.set_trace()
+                            if sight.bonuses == None:
+                                sight.bonuses = '[' + str(bonus) + ']' # make it look like a list of dicts
+                            else:
+                                if sight.bonuses != '[' + str(bonuses) +']':
+                                    # Round-trip the text to list to text
+                                    bonus_list = ast.literal_eval(sight.bonuses)
+                                    bonus_list.append(ast.literal_eval(bonus))
+                                    sight.bonuses = str(bonus_list)
+                            sighting.save(sight)
                     
         # record the number of available bikes
         if new_data['available'] > 0:
@@ -202,7 +220,7 @@ def get_jump_data():
         
         db.commit()
         mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
-        #print(mes)
+        
         return(mes)
     
     except Exception as e:
