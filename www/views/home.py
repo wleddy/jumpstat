@@ -3,7 +3,7 @@ from flask import request, session, g, redirect, url_for, abort, \
 from users.admin import login_required, table_access_required
 from jump.models import Sighting, Trip, Bike
 from jump.views import jump
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 from statistics import median
 import mistune # for Markdown rendering
@@ -25,8 +25,9 @@ def home():
     rendered_html = render_markdown_for('index.md')
     report_data = get_report_data()
     summary_data = jump.make_data_dict()
+    hourly_data = hourlies()
 
-    return render_template('index.html',rendered_html=rendered_html, data=summary_data,report_data=report_data)
+    return render_template('index.html',rendered_html=rendered_html, data=summary_data,report_data=report_data, hourly_data=hourly_data)
 
 
 @mod.route('/about', methods=['GET',])
@@ -233,3 +234,62 @@ def get_available_bikes_sql():
     return """select bikes_available from available_bike_count
 where retrieved >= '{start_date}' and retrieved <= '{end_date}' {city_clause}
 """
+
+def hourlies(days_to_report=1):
+    """
+    Return a dictionary designed to be used to report on
+    the hourly bike usage and availability
+    
+    Returns 12 hours of data stating 24 hours befor now
+    If no data is found at all, retruns None
+    """
+    if days_to_report <= 0:
+        days_to_report = 1
+        
+    hourly_data = {}
+    hourly_data['hours'] = []
+    end_date = datetime.now().replace(minute=0,second=0,microsecond=0) - timedelta(minutes=1)
+    start_date = end_date - timedelta(days=days_to_report) + timedelta(minutes=1)
+    hourly_data['start_date'] = start_date.strftime('%B %-d, %Y %-I:%M %p')
+    hourly_data['end_date'] = end_date.strftime('%B %-d, %Y %-I:%M %p')
+    trip_list = []
+    bike_list = []
+    has_data = False
+    for hour in range(24):
+        query_start = start_date
+        query_end = query_start + timedelta(minutes=59)
+        
+        hourly_data['hours'].append(start_date.hour)
+        sql = """select count(trip.id) as trip_count from trip 
+            join sighting on destination_sighting_id = sighting.id
+            where sighting.retrieved >= '{}' and sighting.retrieved <= '{}'
+            """.format(query_start.isoformat(sep=" "),query_end.isoformat(sep=" "))
+        trip_cnt = g.db.execute(sql).fetchone()
+        sql = """select avg(bikes_available) as bikes from available_bike_count 
+            where retrieved >= '{}' and retrieved <= '{}' group by city 
+            """.format(query_start.isoformat(sep=" "),query_end.isoformat(sep=" "))
+        bike_cnt = g.db.execute(sql).fetchall()
+        if trip_cnt and bike_cnt:
+            has_data = True
+            trip_list.append(int(trip_cnt['trip_count']/days_to_report))
+            cnt = 0
+            for x in bike_cnt:
+                cnt += x['bikes']
+            
+        
+            bike_list.append(int(cnt/days_to_report))
+        else:
+            trip_list.append(0)
+            bike_list.append(0)
+ 
+        start_date = start_date + timedelta(hours=1)
+        
+    hourly_data['trips'] = trip_list
+    hourly_data['bikes'] = bike_list
+    
+    if has_data:
+        return hourly_data
+    else:
+        return None
+
+    

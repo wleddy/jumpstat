@@ -97,7 +97,7 @@
     <p>Total Trips: {{ data.trips }}</p>
 </div>
 
-<div id="monthly_data">
+<div>
     {% if report_data %}
         <h3>Monthly Report</h3>
         {% for month in report_data %}
@@ -165,14 +165,59 @@
                 {% endfor %}
             </table>
             
-        {% endfor %}
+            <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
+                * Network Wide counts may not equal the total of all 
+                city counts because some trips end in a city other than the one they started in.
+            </p>
         </div>
-        <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
-            * Network Wide counts may not equal the total of all 
-            city counts because some trips end in a city other than the one they started in.
-        </p>
+        {% endfor %}
     {% else %}
     <h3>Sorry, there is no data to display</h3>
     {% endif %}
 </div>
+{% if hourly_data %}
+<style>
+    div#hourlies table th:first-child, td {
+        text-align:right;
+    }
+    
+</style>
+<div id="hourlies">
+    <h3>Hourlys</h3>
+    <p>
+        Bikes available vs. Trips taken by hour over the last 24 hours.<br>
+        {{ hourly_data['start_date'] }} to {{ hourly_data['end_date'] }}
+    
+    </p>
+    
+    <table>
+        <tr>
+            <th>Hour:</th>
+            {% for hour in hourly_data['hours'] %}
+            {% if hour == 0 %}
+            {% set hour = 'Mid'%}
+            {% endif %}
+            {% if hour == 12 %}
+            {% set hour = 'Noon'%}
+            {% endif %}
+            <th>
+                {{ hour }}
+            </th>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Trips:</th>
+         {% for trip in hourly_data['trips'] %}
+          <td>{{ trip }}</td>
+       {% endfor %}
+       </tr>
+       <th>Bikes avail.:</th>
+         {% for bike in hourly_data['bikes'] %}
+          <td>{{ bike }}</td>
+       {% endfor %}
+    </table>
+</div> 
+{% else %}
+<p>Sorry, no hourly data.</p>
+{% endif %}
 {% endblock body %}
