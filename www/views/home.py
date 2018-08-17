@@ -25,7 +25,7 @@ def home():
     rendered_html = render_markdown_for('index.md')
     report_data = get_report_data()
     summary_data = jump.make_data_dict()
-    hourly_data = hourlies(3)
+    hourly_data = hourlies(1)
     hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
     
     
@@ -296,7 +296,7 @@ def hourlies(days_to_report=1):
             for x in bike_cnt:
                 cnt += x['bikes']
             
-            cnt = int(cnt/days_to_report)
+            cnt = int(cnt)
             bike_list.append(cnt)
             if cnt > max_bikes:
                 max_bikes = cnt
