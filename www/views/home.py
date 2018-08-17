@@ -2,7 +2,7 @@ from flask import request, session, g, redirect, url_for, abort, \
      render_template, flash, Blueprint, Response
 from users.admin import login_required, table_access_required
 from jump.models import Sighting, Trip, Bike
-from jump.views import jump
+from jump.views import jump, hourly_graph
 from datetime import datetime, timedelta
 import calendar
 from statistics import median
@@ -25,9 +25,17 @@ def home():
     rendered_html = render_markdown_for('index.md')
     report_data = get_report_data()
     summary_data = jump.make_data_dict()
-    hourly_data = hourlies()
-
-    return render_template('index.html',rendered_html=rendered_html, data=summary_data,report_data=report_data, hourly_data=hourly_data)
+    hourly_data = hourlies(3)
+    hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
+    
+    
+    return render_template('index.html',
+        rendered_html=rendered_html, 
+        data=summary_data,
+        report_data=report_data, 
+        hourly_data=hourly_data,
+        hourly_graph_html=hourly_graph_html,
+        )
 
 
 @mod.route('/about', methods=['GET',])
@@ -240,7 +248,13 @@ def hourlies(days_to_report=1):
     Return a dictionary designed to be used to report on
     the hourly bike usage and availability
     
-    Returns 12 hours of data stating 24 hours befor now
+    Returns 12 hours of data stating 24 hours before now in a dictionary like so:
+    
+    {'start_date': 'a date string','end_date: 'a date string, 'days': nnumber of days in report,
+        'hours': [ hours 0-23 in the order to report], 
+        'trips':[ int values of trips for each our ], 'bikes': [ int values of bike counts for each hour],
+        'max_bikes': highest in 'bikes', 'max_trips': highest in 'trips', 
+    }
     If no data is found at all, retruns None
     """
     if days_to_report <= 0:
@@ -254,6 +268,8 @@ def hourlies(days_to_report=1):
     hourly_data['end_date'] = end_date.strftime('%B %-d, %Y %-I:%M %p')
     trip_list = []
     bike_list = []
+    max_bikes = 0
+    max_trips = 0
     has_data = False
     for hour in range(24):
         query_start = start_date
@@ -271,23 +287,31 @@ def hourlies(days_to_report=1):
         bike_cnt = g.db.execute(sql).fetchall()
         if trip_cnt and bike_cnt:
             has_data = True
-            trip_list.append(int(trip_cnt['trip_count']/days_to_report))
+            cnt = int(trip_cnt['trip_count']/days_to_report)
+            trip_list.append(cnt)
+            if cnt > max_trips:
+                max_trips = cnt
+            
             cnt = 0
             for x in bike_cnt:
                 cnt += x['bikes']
             
-        
-            bike_list.append(int(cnt/days_to_report))
+            cnt = int(cnt/days_to_report)
+            bike_list.append(cnt)
+            if cnt > max_bikes:
+                max_bikes = cnt
         else:
             trip_list.append(0)
             bike_list.append(0)
  
         start_date = start_date + timedelta(hours=1)
         
-    hourly_data['trips'] = trip_list
-    hourly_data['bikes'] = bike_list
-    
     if has_data:
+        hourly_data['trips'] = trip_list
+        hourly_data['bikes'] = bike_list
+        hourly_data['max_bikes'] = max_bikes
+        hourly_data['max_trips'] = max_trips
+        hourly_data['days'] = days_to_report
         return hourly_data
     else:
         return None

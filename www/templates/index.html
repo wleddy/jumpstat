@@ -175,21 +175,54 @@
     <h3>Sorry, there is no data to display</h3>
     {% endif %}
 </div>
+{% if hourly_graph_html and hourly_data %}
+    <style>
+        #hourly-graph-contain {
+            margin:20px auto;
+            width:400px;
+        }
+    </style>
+<h3>Hourly Usage</h3>
+<p>
+    
+    {% if hourly_data['days'] > 1 %}
+    Average of number Bikes available vs. Trips taken by hour over the last {{hourly_data['days'] }} days.
+    {% else %}
+    Number of Bikes available vs. Trips taken by hour over the last 24 hours.
+    {% endif %}<br>
+    {{ hourly_data['start_date'] }} to {{ hourly_data['end_date'] }}
+
+</p>
+    
+
+<div id="hourly-graph-contain">
+    {{ hourly_graph_html | safe() }}
+    <div id="hourly-graph-ledgend">
+        <style>
+            #hourly-graph-ledgend p {
+                text-align:center;
+                font-size:80%;
+                width:{graph_box_width}pt;
+                border: .5pt solid #aaa;
+                padding:3pt;
+                margin:10pt auto;
+            }
+        </style>
+        <p>Bikes available: <span class="bike-color-box">&nbsp;</span>&nbsp;&nbsp;Trips taken: <span class="trip-color-box">&nbsp;</span></p>
+    </div>
+    
+</div>
+{% endif %}
 {% if hourly_data %}
 <style>
-    div#hourlies table th:first-child, td {
+    #hourly-table {display:none;}
+    div#hourly-table table th:first-child, td {
         text-align:right;
     }
     
 </style>
-<div id="hourlies">
-    <h3>Hourlys</h3>
-    <p>
-        Bikes available vs. Trips taken by hour over the last 24 hours.<br>
-        {{ hourly_data['start_date'] }} to {{ hourly_data['end_date'] }}
-    
-    </p>
-    
+<p class="script-link" onclick="$('#hourly-table').toggle();">Show me the data...</p>
+<div id="hourly-table">
     <table>
         <tr>
             <th>Hour:</th>
