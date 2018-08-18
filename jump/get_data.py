@@ -12,6 +12,7 @@ from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from users.utils import printException
 import ast
 
+
 # Sample request data:
 # {
 #     "current_page": 1,
