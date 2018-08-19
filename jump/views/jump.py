@@ -12,7 +12,7 @@ def setExits():
 
 @mod.route('/get_data', methods=['GET','POST'])
 @mod.route('/get_data/', methods=['GET','POST'])
-@silent_login
+@silent_login()
 def get_data():
     setExits()
     from jump.get_data import get_jump_data

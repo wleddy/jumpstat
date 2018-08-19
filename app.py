@@ -2,7 +2,7 @@ from flask import Flask, render_template, g, session, url_for, request, redirect
 from flask_mail import Mail
 
 from users.database import Database
-from users.models import User,Role,init_db
+from users.models import User,Role,init_db, Pref
 from users.admin import Admin
 
 # Create app
@@ -44,6 +44,7 @@ def _before():
         g.admin = Admin(g.db)
         g.admin.register(User,url_for('user.display'),display_name='Users',minimum_rank_required=500,roles=['admin',])
         g.admin.register(Role,url_for('role.display'),display_name='Roles',minimum_rank_required=1000)
+        g.admin.register(Pref,url_for('pref.display'),display_name='Prefs',minimum_rank_required=1000)
 
 
 @app.teardown_request
@@ -64,10 +65,11 @@ def _teardown(exception):
 from www.views import home
 app.register_blueprint(home.mod)
 
-from users.views import user, login, role
+from users.views import user, login, role, pref
 app.register_blueprint(user.mod)
 app.register_blueprint(login.mod)
 app.register_blueprint(role.mod)
+app.register_blueprint(pref.mod)
 
 from jump.views import jump
 app.register_blueprint(jump.mod)
