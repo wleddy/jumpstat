@@ -70,6 +70,7 @@ class Trip(SqliteTable):
             jump_bike_id NUMBER,
             origin_sighting_id INTEGER,
             destination_sighting_id INTEGER,
+            miles NUMBER,
             FOREIGN KEY (origin_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE,
             FOREIGN KEY (destination_sighting_id) REFERENCES sighting(id) ON DELETE CASCADE
             """

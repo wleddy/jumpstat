@@ -183,6 +183,7 @@ def get_jump_data():
                         trp.jump_bike_id = sight.jump_bike_id
                         trp.origin_sighting_id = temp_sight[1].id
                         trp.destination_sighting_id = temp_sight[0].id
+                        trp.miles = haversine(temp_sight[1].lng,temp_sight[1].lat,temp_sight[0].lng,temp_sight[0].lat)
 
                         trip.save(trp)
                         new_data['trip'] += 1
@@ -270,6 +271,25 @@ def alert_admin(mes):
             subject="Error Getting Jump Data",
             body = mes,
             )
+
+from math import radians, cos, sin, asin, sqrt
+def haversine(lng1, lat1, lng2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lng1, lat1, lng2, lat2 = map(radians, [lng1, lat1, lng2, lat2])
+    # haversine formula 
+    dlon = lng2 - lng1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    # Radius of earth in kilometers is 6371
+    km = 6371 * c
+    
+    mi = km * 0.6213712 #convert to miles
+    return mi
 
 
 if __name__ == '__main__':
