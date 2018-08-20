@@ -2,7 +2,9 @@
 {% block title %}{{g.title}}{% endblock %}
 {% block body %}
 {% if rendered_html%}
+<div class="markdown">
 {{ rendered_html | safe()}}
+</div>
 {% else %}
     <h2>No Info available</h2>
     <p>How About that?</p>

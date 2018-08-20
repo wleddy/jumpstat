@@ -54,8 +54,9 @@ def _teardown(exception):
         g.db.close()
 
         
-from www.views import home
+from www.views import home,docs
 app.register_blueprint(home.mod)
+app.register_blueprint(docs.mod)
 
 from users.views import user, login, role, pref
 app.register_blueprint(user.mod)

@@ -65,7 +65,21 @@ ol, li, dl, dt, dd
 { 
 	line-height: 1.5em; 
 }
-
+ul li ul li, ul li ul li ul li {
+    list-style-position:inside;
+    padding-left:.8em;
+    line-height:1.2;
+}
+ul li ul li ul li {
+    padding-left:1.6em;
+}
+.markdown ul li ul li ul li {
+    list-style:none;
+    padding-left:1.6em;
+}
+.markdown ul li ul li ul {
+    padding-bottom:.3em;
+}
 code {
     font-family:Monaco, "Courier New", courier, monospace;
     font-size:.8em;
