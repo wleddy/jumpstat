@@ -41,6 +41,7 @@ def _before():
         g.user = session['user']
         
     if 'admin' not in g:
+        """Register menu items for the user dropdown"""
         g.admin = Admin(g.db)
         g.admin.register(User,url_for('user.display'),display_name='Users',minimum_rank_required=500,roles=['admin',])
         g.admin.register(Role,url_for('role.display'),display_name='Roles',minimum_rank_required=1000)
@@ -52,15 +53,6 @@ def _teardown(exception):
     if 'db' in g:
         g.db.close()
 
-#from jump.get_jump_bikes import InfiniteTimer,get_jump_data
-#
-#t = InfiniteTimer(10.0, get_jump_data)
-#t.start()
-#t.start()
-
-#from jump.get_jump_bikes import begin_timer
-#begin_timer(app.config['JUMP_REQUEST_SECONDS'])
-#begin_timer(10.0)
         
 from www.views import home
 app.register_blueprint(home.mod)
