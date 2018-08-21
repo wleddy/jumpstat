@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ g.title }}{% endblock %}
+
+{% block head %}
+    {% include "mapHeaders.html" %}
+{% endblock head %}
+
+{% block body %}
+	<h2>{{ g.title }}</h2>
+	{% if markerData == '' %}
+		<h3>No Map Data Found.</h3>
+	{% endif %}
+		<div id="tripsMap"></div>
+        <script type="text/javascript">
+            // Initialize the map
+            var map = new JumpMap('{{ config.MAPBOX_PROJECT_ID }}', '{{ config.MAPBOX_ACCESS_TOKEN }}',"tripsMap");
+		</script>
+	{% if markerData != '' %}
+        <script type="text/javascript">
+            // Add markers
+			map.addMarkersFromJSON('{{markerData|tojson|safe}}','{{ url_for(".mapError") }}');
+		</script>
+	{% endif %}
+{% endblock body %}

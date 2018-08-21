@@ -67,6 +67,9 @@ app.register_blueprint(pref.mod)
 from jump.views import jump
 app.register_blueprint(jump.mod)
 
+from mapping.views import maps
+app.register_blueprint(maps.mod)
+
 if __name__ == '__main__':
     with app.app_context():
         init_db(get_db())

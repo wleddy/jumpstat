@@ -1,0 +1,40 @@
+
+#tripsMap {
+    height: 800px;
+}
+
+#locationMap {
+    height: 400px;
+    width: 400px;
+}
+
+.mapPopUpTitle{
+  font-weight:900;
+}
+.mapPopupTripCount {
+  font-style:italic;
+}
+
+/* style for the map marker div */
+.divIcon {
+	width:40px;
+}
+
+.divIconCount {
+	text-align:center;
+	border: 1pt solid #aaa;
+	border-radius:8px;
+	padding:2px;
+	margin:0;
+	color:black;
+	background-color:white;
+}
+
+.divIconImageContain {
+	text-align:center;
+	margin:4px 0;
+}
+
+.divIconImage {
+	width:30px;
+}
