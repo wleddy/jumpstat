@@ -11,6 +11,7 @@ def setExits():
     g.title = 'Jump Map'
     
 @mod.route('/time_lapse', methods=['GET'])
+@mod.route('/time_lapse/', methods=['GET'])
 def time_lapse_map():
     """
     Display an automated map of bike sightings over time
