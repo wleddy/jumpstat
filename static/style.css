@@ -40,7 +40,12 @@ p, a
 	line-height: 1.2;
 	font-size:100%;
 }
-
+span {
+    font-family:inherit;
+    font-size:inherit;
+    line-height:inherit;
+    color:inherit;
+}
 strong {
     font-weight:800;
 }
