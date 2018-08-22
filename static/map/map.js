@@ -29,51 +29,25 @@ function JumpMap(mapboxProjectId, mapboxAccessToken, mapDivId) {
         this.cluster = L.markerClusterGroup();
     }
 	
-    this.locations = [];
     this.geocodes = [];
+    this.locations = [];
 }
 
+function getJumpIcon(){
+    var jumpIcon = L.icon({
+    iconUrl: '/static/map/images/jumpMarker-8.png',
+    iconSize: [8, 8],
+    iconAnchor: [4, 4],
+    popupAnchor: [2, 2],
+    });        
+    return jumpIcon
+}
+
+
 JumpMap.prototype = {
+    
     constructor: JumpMap,
     
-    /**
-     * Add a simple location marker.
-     *
-     * @param locationName
-     * @param latitude
-     * @param longitude
-     * @param draggable
-     */
-     addSimpleLocation: function(locationName, latitude, longitude, draggable)  {
-		this.pushNewLocation(locationName, latitude, longitude);
-		var options = {};
- 		options.draggable = draggable;
-
- 		var marker = L.marker([latitude, longitude],options);
- 		marker.addTo(this.map);
- 		marker.bindPopup(locationName);
-		this.zoomToFitAllMarkers();
-     },
-
-    /**
-     * Add a Trip location marker.
-     *
-     * @param locationName
-     * @param latitude
-     * @param longitude
-     * @param tripCount
-     */
-    addTripLocation: function(locationName, latitude, longitude, tripCount) {
-		// Test if there are any locations and if this one exists...
-        if (this.locations.length > 0 && this.mapHasMarkerAt(latitude,longitude)){
-			// if the location already exists, add count to existing trip
-			this.addTripCountToExistingLocation(this.locations[trip], tripCount);
-			return;
-		}
-		// location doesn't exist, so push it to trips
-		this.pushNewLocation(locationName, latitude, longitude, tripCount);
-    },
-
 	/**
 	Add markers using JSON object
 	*
@@ -81,14 +55,20 @@ JumpMap.prototype = {
 	* @param url of error response page
 	*
 	*/
+    
+	markerData: {},
+    local_locations: [],
+    
 	addMarkersFromJSON: function(data,errorPage){
-		var markerData;
 		var parseError =false;
 		var errorMess = '';
-		//console.log('the Data: ' + data);
+		var mapIcon = getJumpIcon();
 
 		try{
 			markerData = JSON.parse(data);
+            markerData.frame_start_time = 0;
+            markerData.frame_end_time = 0;
+            
 		}catch(errorMess){
 			alert("err '" + errorMess + "'");
 			parseError = true;
@@ -98,16 +78,14 @@ JumpMap.prototype = {
 			    data = markerData.markers[i]
                 /*
                 Each marker element is an array as:
-                    sighting_id as string
                     lng,
                     lat,
                     starting_time_code,
                     ending_time_code
                 */
-				if(	data.length == 5 && 
-					!this.mapHasMarkerAt(data[1],data[2])
+				if(	data.length == 4 && 
+					!this.mapHasMarkerAt(data[0],data[1])
 					){
-					this.pushNewLocation(data[0], data[1], data[2])
 					
 					var options = {};
 					var draggable = false;
@@ -115,9 +93,13 @@ JumpMap.prototype = {
 						draggable = (data.draggable == true );
 					}
 					options.draggable = draggable;
-					
-					var marker = L.marker([data[2], data[1]],options);
-					
+					options.icon = mapIcon
+					var marker = L.marker([data[1], data[0]],options);
+                    // all markers are hidden by default
+					marker.setOpacity(0);
+                    
+					this.pushNewLocation(data,marker)
+                    
 					//this.setDragFunction(marker);
 					
                     /*
@@ -171,6 +153,16 @@ JumpMap.prototype = {
 	            // Show the whole world
 				this.map.fitWorld();
 	        }
+            
+            local_locations = this.locations;
+            // Play the animation
+            if (markerData.frame_duration != undefined) {
+                if (markerData.seconds_per_frame === undefined){
+                    markerData.seconds_per_frame = 2;
+                }
+                this.animation();
+                this.animator = setInterval(this.animation, markerData.seconds_per_frame * 1000);
+            }
 				
 		}else{
 			// error parsing JSON data
@@ -179,52 +171,6 @@ JumpMap.prototype = {
 		}
 		// end of addMarkersFromJSON()
 	},
-	
-
-    /**
-     * Get and add current geolocation.
-     *
-     * @param locationName
-     * @param latitudeFieldId
-     * @param longitudeFieldId
-     */
-    addCurrentLocation: function(locationName, defaultLat, defaultLng, latitudeFieldId, longitudeFieldId, NSheadingFieldID, EWheadingFieldID) {
-        if (navigator.geolocation) {
-            var self = this;
-
-            navigator.geolocation.getCurrentPosition(function(position) {
-                // Add the location
-                //self.addSimpleLocation(locationName, position.coords.latitude, position.coords.longitude, true);
-								var NSheading = 0;
-								var EWheading = 90;
-                self.addLocationMarker(locationName, position.coords.latitude, position.coords.longitude, NSheading, EWheading);
-
-                // Update location input fields
-                self.updateFormLocationFields(latitudeFieldId, longitudeFieldId,
-                                     position.coords.latitude, position.coords.longitude, NSheadingFieldID, EWheadingFieldID, NSheading, EWheading);
-
-            }, self.setDefaultLocation(locationName, defaultLat, defaultLng, latitudeFieldId, longitudeFieldId, NSheadingFieldID, EWheadingFieldID));
-        } else {
-            console.log("Geolocation is not supported by this browser.");
-						self.setDefaultLocation(locationName, defaultLat, defaultLng, latitudeFieldId, longitudeFieldId, NSheadingFieldID, EWheadingFieldID);
-        }
-    },
-
-		setDefaultLocation: function(locationName, defaultLat, defaultLng, latitudeFieldId, longitudeFieldId, NSheadingFieldID, EWheadingFieldID){
-			// set a default location if geolocation is not available
-      console.log("Setting default locaiton.");
-			var self = this;
-			// Davis Bike Hall of Fame
-			//var lng = -121.74439430236818;
-			//var lat = 38.54422161206573;
-			var NSheading = 0;
-			var EWheading = 90;
-			//alert("Could not determine your current location, so we placed a marker at the default location");
-      self.addLocationMarker(locationName, defaultLat, defaultLng, NSheading, EWheading);
-      // Update location input fields
-      self.updateFormLocationFields(latitudeFieldId, longitudeFieldId,
-                          defaultLat, defaultLng, NSheadingFieldID, EWheadingFieldID, NSheading, EWheading);
-		},
 		
     /**
      * Push a new location to the locations array.
@@ -235,15 +181,17 @@ JumpMap.prototype = {
      * @param longitude
      * @param tripCount
      */
-    pushNewLocation: function(sighting_id, lng, lat) {
+    pushNewLocation: function(sighting,marker) {
         this.locations.push(
             {
-                sighting_id: sighting_id,
-                latitude: lat,
-                longitude: lng,
+                lng: sighting[0],
+                lat: sighting[1],
+                starting_time_code: sighting[2],
+                ending_time_code: sighting[3],
+                marker: marker
             });
 
-        this.geocodes.push([lat, lng]);
+        this.geocodes.push([this.locations[this.locations.length -1].lat, this.locations[this.locations.length -1].lng]);
     },
 
 	mapHasMarkerAt: function (lng,lat){
@@ -256,89 +204,36 @@ JumpMap.prototype = {
 	    }
 		return false
 	},
-
-
-    /**
-     * If the location already exists in the locations array, then just increment the tripCount.
-     *
-     * @param trip
-     * @param tripCount
-     */
-    addTripCountToExistingLocation: function(trip, tripCount) {
-        trip.tripCount += tripCount;
-    },
-
-    /**
-     * Add the locations to the map as markers.
-     *
-     * @param zoomToFit
-     * @param draggable
-     * @param cluster
-     */
-    setLocationMarkers: function(zoomToFit, draggable, cluster) {
-        for (var trip in this.locations) {
-            if (this.locations.hasOwnProperty(trip)) {
-                this.addLocationMarker(
-                    this.locations[trip].locationName,
-                    this.locations[trip].latitude,
-                    this.locations[trip].longitude,
-                    this.locations[trip].tripCount,
-                    draggable, cluster);
-            }
+    
+    animation: function(){
+        markerData.frame_start_time = markerData.frame_end_time;
+        markerData.frame_end_time = markerData.frame_end_time + markerData.frame_duration;
+        if (markerData.frame_end_time > markerData.total_seconds) {
+            // go to the begining
+            markerData.frame_start_time = 0;
+            markerData.frame_end_time = markerData.frame_duration;
         }
-
-        if (cluster === true) {
-            this.map.addLayer(this.cluster);
-        }
-
-        if (zoomToFit === true) {
-            this.zoomToFitAllMarkers();
-        }
-    },
-
-    /**
-     * Add a location marker to the map.
-     *
-     * @param locationName
-     * @param latitude
-     * @param longitude
-     * @param tripCount
-     * @param draggable
-     * @param cluster
-     
-     Feb 7, 2017 BL
-     This fuction now creates a 4 legged marker used when editing a location record
-     The marker can be aligned with the map to set the headings for the streets
-     */
-     
-     lastLocationMarker: undefined,
-     
-    //addLocationMarker: function(locationName, latitude, longitude, tripCount, draggable, cluster) {
-    addLocationMarker: function(locationName, latitude, longitude, northHeading, eastHeading) {
-        //distroy the old marker if one exists
-        if(this.lastLocationMarker != undefined){
-            this.lastLocationMarker.remove();
-            this.lastLocationMarker = undefined;
-        }
-        // Create marker
-        var options = {draggable: true};
-        var marker = L.alignmentMarker([latitude, longitude],options,northHeading,eastHeading)
-        marker.addTo(this.map);
-    	this.setDragFunction(marker);
-        this.lastLocationMarker = marker;
-
-        var position = marker.getLatLng();
-        this.updateFormLocationFields("latitude", "longitude", position.lat, position.lng);
-
-
-        if (locationName !== undefined && locationName !== "") {
-            // Create trip marker popup string
-            var tripString = "<b>" + locationName + "</b>";
-            marker.bindPopup(tripString);
-        }
+        //id="display_date"></span> <span id="display_time"
+        the_time = markerData.frame_start_time / 3600;
+        if (the_time < 0){ the_time = 0;}
+        hours = Math.trunc(the_time);
+        minutes = Math.trunc((the_time - hours)*60);
         
-        this.map.fitBounds([marker.getLatLng()]);
-        return marker;
+        $('#display_time').text('Time: '+("00" + hours.toString()).substr(-2)+ ":" + ("00" + minutes.toString()).substr(-2))
+        if (local_locations == undefined){
+            local_locations = this.locations;
+        }
+            for (var y=0; y<local_locations.length; y++){
+                // check every marker
+                my_loc = local_locations[y]
+                if (local_locations[y].starting_time_code <= markerData.frame_start_time &&
+                    local_locations[y].ending_time_code >= markerData.frame_end_time                           
+                    ) {
+                        local_locations[y].marker.setOpacity(1);
+                    } else {
+                        local_locations[y].marker.setOpacity(0);
+                    }
+            }
     },
 
     /**
@@ -350,6 +245,7 @@ JumpMap.prototype = {
     },
 	setDragFunction: function(theMarker){
 		var self = this;
+        /*
 		// 'draggable' is in the 'options' object
         if (theMarker.options.draggable === true) {
             // Add drag event handler
@@ -359,7 +255,7 @@ JumpMap.prototype = {
 
                 self.updateFormLocationFields("latitude", "longitude", position.lat, position.lng);
             });
-		}
+		} */
     },
 	setZoomFunction: function(theMap,clusterLayer,canvasLayer){
 		if(theMap != undefined){
@@ -376,35 +272,6 @@ JumpMap.prototype = {
                 */
 			});
 		}
-	},
-
-    /**
-     * Update the location form input fields.
-     *
-     * @param latitudeFieldId
-     * @param longitudeFieldId
-     * @param latitude
-     * @param longitude
-     * @param NSheadingFieldID
-     * @param EWheadingFieldID
-     * @param NSheading
-     * @param EWheading
-     */
-
-    updateFormLocationFields: function(latitudeFieldId, longitudeFieldId, latitude, longitude, NSheadingFieldID, EWheadingFieldID, NSheading, EWheading) {
-        if (latitudeFieldId !== undefined && longitudeFieldId !== undefined) {
-			var theID = document.getElementById(latitudeFieldId);
-			if(theID != null){theID.value = latitude;}
-			theID = document.getElementById(longitudeFieldId);
-			if(theID != null){theID.value = longitude;}
-			theID = document.getElementById(NSheadingFieldID);
-			if(theID != null){theID.value = NSheading;}
-			theID = document.getElementById(EWheadingFieldID);
-			if(theID != null){theID.value = EWheading;}
-			theID = document.getElementById('mapURL');
-			if(theID != null){theID.value = "https://www.google.com/maps/place//@"+ latitude +","+ longitude +",17z";}
-        }
-    }
-
+	}
 };
 

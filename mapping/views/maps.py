@@ -11,27 +11,22 @@ def setExits():
     g.title = 'Jump Map'
     
 @mod.route('/time_lapse', methods=['GET'])
-def time_lapse_map(start_date='2018-08-17',days=1):
+def time_lapse_map():
     """
     Display an automated map of bike sightings over time
     """
-    
-    """
-    TODO - Need to "preload" the map with all the bikes that are there at the start
-    of the period. They would all have a start time code of 0 and an end time code of the
-    time of their last retrieval
-    """
     setExits()
-    days = 3
-    start_date = datetime(2018,8,17) #'2018-08-17 00:00:00.0'
+    days = 1
+    start_date = datetime.now() + timedelta(days=-1) # Always starts at midnight, yesterday
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_date = start_date + timedelta(days=days,seconds=-1) 
     
     frame_duration = 10 * 60 # this many seconds of real time elapse between each frame
-    seconds_per_frame = 2 # display each frame for this many seconds
-    
+    seconds_per_frame = 1 # display each frame for this many seconds
+        
     sql = """select id, lng, lat, sighted, retrieved from sighting where 
-            sighted >= '{start_date}' and retrieved <= '{end_date}' 
-            order by sighted;
+            retrieved >= '{start_date}' and sighted <= '{end_date}' 
+            order by sighted
         """.format(start_date=start_date.isoformat(sep=' '), end_date=end_date.isoformat(sep=' '))
         
     recs = g.db.execute(sql).fetchall()
@@ -42,36 +37,35 @@ def time_lapse_map(start_date='2018-08-17',days=1):
     if recs:
         """
         The Marker is a list of lists containing:
-            sighting id as str,
             lng,
             lat,
-            display starting seconds,
-            display ending seconds
+            display start seconds,
+            display end seconds
         
         At play time in javascript, every frame_duration seconds loop through Markers:
-            if start seconds >= time code and end seconds <= time code,
-                add to map if not there
+            if display start seconds <= frame start time and display end seconds >= frame end time,
+                set the marker opacity to 1
             else
-                remove from map if there
+                set opacity to 0
         """
-        # set start and end to the records retrieved
+        
         fmt = '%Y-%m-%d %H:%M:%S.%f'
-        start_date = datetime.strptime(recs[0]['sighted'],fmt)
-        end_date = datetime.strptime(recs[len(recs)-1]['retrieved'],fmt)
-        #print('end_date: {}'.format(end_date))
         total_seconds = int(round((end_date - start_date).total_seconds(),0))
         markerData["zoomToFit"] = True
-        frame_end = frame_duration
         markerData['total_seconds'] = total_seconds
         markerData['frame_duration'] = frame_duration
         markerData['seconds_per_frame'] = seconds_per_frame
+        
+        #import pdb;pdb.set_trace()
         for rec in recs:
             sighted_dt = datetime.strptime(rec['sighted'],fmt)
+            if sighted_dt.day == 17:
+                #import pdb;pdb.set_trace()
+                pass
             #print('sighted_dt: {}'.format(sighted_dt))
             retrieved_dt = datetime.strptime(rec['retrieved'],fmt)
             #print('retrieved_dt: {}'.format(retrieved_dt))
-            markerData["markers"].append([str(rec['id']),
-                                        round(rec['lng'],5),
+            markerData["markers"].append([round(rec['lng'],5),
                                         round(rec['lat'],5),
                                         int(round((sighted_dt - start_date).total_seconds(),0)),
                                         int(round((retrieved_dt - start_date).total_seconds(),0)),
