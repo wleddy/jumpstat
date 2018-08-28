@@ -42,7 +42,7 @@
     }
 
     div#monthly_data table {
-        display:inline;
+        display:inline-block;
     }
 
     #table_2 {
@@ -104,6 +104,7 @@
         <h4>Data for {{ month['month_name']}}</h4>
 
         <div id="monthly_data">    
+            <!--
             <table id="table_1">
                 <tr>
                     <th class="city_column">City</th>
@@ -116,19 +117,20 @@
                 </tr>
                 {% endfor %}
             </table>
-            <table id="table_2">
+            -->
+            <table id="table_1">
                 <tr>
-                    <th class="city_column_2 ">City</th>
+                    <th class="city_column ">City</th>
                     <th class="label_column">Trips Taken</th>
                 </tr>
                 {% for city in month['cities'] %}
                 <tr>
-                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="city_column">{{ city['city'] }}</td>
                     <td class="num">{{ city['city_trips'] }}</td>
                 </tr>
                 {% endfor %}
             </table>
-            <table id="table_3">
+            <table id="table_2">
                 <tr>
                     <th class="city_column_2">City</th>
                     <th class="label_column">Median Bikes Available</th>
@@ -140,7 +142,7 @@
                 </tr>
                 {% endfor %}
             </table>
-            <table id="table_4">
+            <table id="table_3">
                 <tr>
                     <th class="city_column_2">City</th>
                     <th class="label_column">Trips per day</th>
@@ -152,7 +154,7 @@
                 </tr>
                 {% endfor %}
             </table>
-            <table id="table_5">
+            <table id="table_4">
                 <tr>
                     <th class="city_column_2">City</th>
                     <th class="label_column">Trips per day per bike</th>
@@ -167,9 +169,11 @@
             
             <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
                 * Network Wide counts may not equal the total of all 
-                city counts because some trips end in a city other than the one they started in.<br>
+                city counts because some trips end in a city other than the one they started in.
+                <!-- <br>
                 ** Bikes Observed is unique bikes seen at least once within the city during the 
                 report period.
+                -->
             </p>
         </div>
         {% endfor %}
