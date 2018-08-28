@@ -37,7 +37,7 @@ import ast
 #                 ]
 #             },
 #             "bonuses": [
-# 
+#  only if a bonus exists --> {'type': 'bringing_discharged_ebike_to_charging_station', 'amount': 0.5}
 #             ]
 #         },
 #         {
@@ -55,11 +55,6 @@ def get_jump_data():
         db = Database(working_path + "/" + app.config['DATABASE_PATH']).connect()
         init_tables(db) # creates tables if needed
 
-        ###############################
-        # Use the lng to determine what city the bike is in.
-        # Crude but simple
-        eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
-        eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
     
         # Use this to determine if bikes have been off the system too long (getting recharged?)
         
@@ -95,137 +90,73 @@ def get_jump_data():
         observations = request_data['items']
         
         retrieval_dt = datetime.now()
-        day_number = int(retrieval_dt.strftime('%Y%m%d'))
-        sighting = Sighting(db)
-        bike = Bike(db)
-        trip = Trip(db)
+        sightings = Sighting(db)
+        bikes = Bike(db)
+        trips = Trip(db)
         new_data = {'sighting':0, 'bike': 0, 'trip': 0, 'available': 0,}
         avail_city_data = {}
     
         for ob in observations:        
-            new_sighting = False
-            lng = ob['current_position']['coordinates'][0]
-            lat = ob['current_position']['coordinates'][1]
-            # round the locattion down to avoid seeing very small reporting differences look like a trip
-            sql = 'jump_bike_id = {} and ROUND(lng,3) = ROUND({},3) and ROUND(lat,3) = ROUND({},3)'.format(ob['id'],lng,lat)
-            sight = sighting.select_one(where=sql)
+            lng = ob['lng'] = ob['current_position']['coordinates'][0]
+            lat = ob['lat'] = ob['current_position']['coordinates'][1]
+            ob['retrieved'] = retrieval_dt
+
+            sql = 'jump_bike_id = {}'.format(ob['id'])
+            bike = bikes.select_one(where=sql)
             new_data['available'] += 1
-        
-            #determine the city for this sighting
-            if lng <= eastern_davis_boundry:
-                city = "Davis"
-            elif lng <= eastern_west_sac_boundry:
-                city = "West Sacramento"
-            else:
-                city = "Sacramento"
+            
+            city = get_city(lng,lat)
             if city in avail_city_data:
                 avail_city_data[city] += 1
             else:
                 avail_city_data[city] = 1
             
-            if sight != None:
-                # update the sighting date
-                sight.retrieved = retrieval_dt
-                sight.day_number = day_number
-                sighting.save(sight)
-            else:
-                # only create a record if the bike has moved
-                new_sighting = True
-                sight = sighting.new()
-                sight.jump_bike_id = ob.get('id',None)
-                sight.bike_name = ob.get('name',None)
-                sight.retrieved = retrieval_dt
-                sight.sighted = retrieval_dt
-                sight.address = ob.get('address',None)
-                sight.network_id = ob.get('network_id',None)
-                sight.lng = lng
-                sight.lat = lat
-                sight.city = city
-                
-                sight.batt_level = ob.get('ebike_battery_level',None)
-                sight.batt_distance = ob.get('ebike_battery_distance',None)
-                sight.hub_id = ob.get('hub_id',None)
-                sight.day_number = day_number
-                sighting.save(sight)
-                new_data['sighting'] += 1
-            
-            #add a bike?
-            bk = bike.select_one(where='jump_bike_id = {}'.format(ob.get('id',None)))
-            if bk == None:
-                bk = bike.new()
-                bk.jump_bike_id = ob.get('id',None)
-                bk.name = ob.get('name',None)
-                bike.save(bk)
+            if not bike:
+                # A new bike...
+                bike = bikes.new()
+                bike.jump_bike_id = ob.get('id',None)
+                bike.name = ob.get('name',None)
+                bikes.save(bike)
                 new_data['bike'] += 1
+                sightings.save(new_sighting(sightings,ob))
+                new_data['sighting'] += 1
+                continue
             
-            if new_sighting:
-                # record the trip that got us to this location
-                """
-                    If we have seen this sighting before AND it was within the last 2 hours
-                    just update the sighting date.
-                    Otherwise we will assume that this bike has been off somewhere getting
-                    Charged / repaired / or possibly redistributed.
-                    I don't know how long a bike will be off line during redisribution. It could
-                    happen quicker than 2 hours but I suspect they would just drop a recharged bike
-                    where it's needed and any "excess" bikes with low charge would go back for recharge
-                
-                    If a we determine that a bike has re-appeared on the net after being serviceed, 
-                    mark 'returned_to_service' as i in the just created sighting record
-                """
-                # last_sighting_limit = datetime.now().replace(hour=datetime.now().hour-2).isoformat(sep=' ')
-            
-                ### If we get 2 or more sightings for this bike we can record a trip and
-                ### it was NOT over the time limit, record a new trip
-                temp_sight = sighting.select(where='jump_bike_id = {}'.format( ob.get('id',None)), order_by='retrieved desc')
-                if temp_sight and len(temp_sight) >= 2:
-                    if temp_sight[1].retrieved > last_sighting_limit:
-                        trp = trip.new()
-                        trp.jump_bike_id = sight.jump_bike_id
-                        trp.origin_sighting_id = temp_sight[1].id
-                        trp.destination_sighting_id = temp_sight[0].id
-                        trp.miles = haversine(temp_sight[1].lng,temp_sight[1].lat,temp_sight[0].lng,temp_sight[0].lat)
+            #Get the last time we saw this bike
+            where = 'jump_bike_id = {}'.format(bike.jump_bike_id)
+            order_by = 'retrieved desc'
 
-                        trip.save(trp)
-                        new_data['trip'] += 1
-                         
-                    else:
-                        # Update the service data for the newly created sighting
-                        #import pdb;pdb.set_trace()
-                        sight.returned_to_service = 1
-                        sighting.save(sight)
-                        
-                """
-                Add any bonuses that have been granted to this bike
-                """
-                if "bonuses" in ob and type(ob['bonuses']) is list:
-                    for bonus in ob['bonuses']:
-                        if bonus: # bonus is a dict
-                            #import pdb;pdb.set_trace()
-                            # Round-trip the text to list to text
-                            if sight.bonuses == None:
-                                bonus_list = []
-                                bonus_dict = bonus
-                                bonus_dict['retrieved'] = sight.retrieved
-                                bonus_list.append(bonus_dict)
-                               
-                            else:
-                                bonus_list = ast.literal_eval(sight.bonuses)
-                                for prev_bonus in bonus_list:
-                                    if 'type' in prev_bonus and 'type' in bonus and \
-                                      prev_bonus['type'] != bonus['type']:
-                                        #add a new bonus type
-                                        bonus_dict = bonus
-                                        bonus_dict['retrieved'] = sight.retrieved
-                                        bonus_list.append(bonus_dict)
-                                        
-                            sight.bonuses = str(bonus_list)
-                            sighting.save(sight)
-                        else:
-                            if sight.bonuses != None:
-                                # bonus is no longer on offer
-                                sight.bonuses = None
-                                sighting.save(sight)
-                    
+            sight = sightings.select_one(where=where, order_by=order_by)
+            if not sight:
+                #This should really never happen...
+                sightings.save(new_sighting(sightings,ob))
+                new_data['sighting'] += 1
+                continue
+                
+            if long_time_no_see(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f')):
+                #This bike has been off getting service
+                sightings.save(new_sighting(sightings,ob,returned_to_service=1))
+                new_data['sighting'] += 1
+                continue
+                
+            # Seeing the bike again so how far has it moved
+            distance = miles_traveled(lng, lat, sight.lng, sight.lat)
+            if distance >= 0.128:
+                #bike moved at least 1/8 mile
+                origin_id = sight.id
+                sight = new_sighting(sightings,ob)
+                sightings.save(sight)
+                new_data['sighting'] += 1
+                # Make a trip
+                trips.save(new_trip(trips,bike.jump_bike_id,origin_id,sight.id,distance))
+                new_data['trip'] += 1
+                
+            else:
+                #too short a move, Just update the sighting record
+                sightings.save(update_sighting(ob,sight))
+                
+        #end ob loop
+        
         # record the number of available bikes
         if new_data['available'] > 0:
             for city in avail_city_data.keys():
@@ -233,7 +164,7 @@ def get_jump_data():
                 avail.bikes_available = avail_city_data[city]
                 avail.city = city
                 avail.retrieved = retrieval_dt
-                avail.day_number = day_number
+                avail.day_number = day_number()
                 AvailableBikeCount(db).save(avail)
         
         db.commit()
@@ -273,11 +204,14 @@ def alert_admin(mes):
             )
 
 from math import radians, cos, sin, asin, sqrt
-def haversine(lng1, lat1, lng2, lat2):
+def miles_traveled(lng1, lat1, lng2, lat2):
     """
     Calculate the great circle distance between two points 
     on the earth (specified in decimal degrees)
     """
+    if lng1 == None or lng2 == None or lat1 == None or lat2 == None:
+        return 0
+        
     # convert decimal degrees to radians 
     lng1, lat1, lng2, lat2 = map(radians, [lng1, lat1, lng2, lat2])
     # haversine formula 
@@ -290,8 +224,131 @@ def haversine(lng1, lat1, lng2, lat2):
     
     mi = km * 0.6213712 #convert to miles
     return mi
+    
+def new_sighting(sightings,data,**kwargs):
+    """
+    Create a new sighting record object and return it.
+    data is single row of the Jump Bike response object
+    
+    """
+    
+    returned_to_service = kwargs.get('returned_to_service',0)
+    
+    rec = sightings.new()
+    rec.jump_bike_id = data.get('id',None)
+    rec.bike_name = data.get('name',None)
+    rec.retrieved = data.get('retrieved',datetime.now())
+    rec.sighted = rec.retrieved
+    rec.address = data.get('address',None)
+    rec.network_id = data.get('network_id',None)
+    rec.lng = data.get('lng',None)
+    rec.lat = data.get('lat',None)
+    rec.returned_to_service = returned_to_service
+    rec.city = get_city(rec.lng,rec.lat)
+    rec.batt_level = data.get('ebike_battery_level',None)
+    rec.batt_distance = data.get('ebike_battery_distance',None)
+    rec.hub_id = data.get('hub_id',None)
+    rec.day_number = day_number()
+    
+    ## Get the bonuses
+    rec.bonuses = get_bonuses(data.get('bonuses',None),rec)
+    return rec
+    
+def update_sighting(data,sight):
+    """
+    Update the sighting record with the latest data
+    """
+    sight.retrieved = data.get('retrieved',datetime.now())
+    sight.day_number = day_number()
+    sight.bonuses = get_bonuses(data.get('bonuses',sight.bonuses),sight)
+    
+    return sight
+    
+def new_trip(trips,bike_id,origin_id,destination_id,distance):
+    """
+    Create a new trip record
+    """
+    trip = trips.new()
+    trip.jump_bike_id = bike_id
+    trip.origin_sighting_id = origin_id
+    trip.destination_sighting_id = destination_id
+    trip.miles = distance
+    
+    return trip
+    
+def day_number():
+    return int(datetime.now().strftime('%Y%m%d'))
+    
+def get_city(lng,lat):
+    """
+    Return the name of the city where we found this bike
+    """
+    #Set up the bounderies
+    ###############################
+    # Use the lng to determine what city the bike is in.
+    # Crude but simple
+    eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
+    eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
+        
+    #determine the city for this sighting
+    if lng <= eastern_davis_boundry:
+        city = "Davis"
+    elif lng <= eastern_west_sac_boundry:
+        city = "West Sacramento"
+    else:
+        city = "Sacramento"
+    
+    return city
+    
+    
+def get_bonuses(bonuses,sight):
+    """
+    Return a string version of the bonuses JSON object or None
+    
+    bonuses is the bonuses element of the Jump Bike response
+    sight is a namedList object of the current sighting record
+    """
 
+    if type(bonuses) is list:
+        try:
+            #convert a string to a list of dicts
+            bonus_list = ast.literal_eval(sight.bonuses)
+        except ValueError:
+            # probably None
+            bonus_list = []
 
+        for bonus_dict in bonuses:
+            if bonus_dict and len(bonus_list) > 0:
+                for prev_bonus in bonus_list:
+                    if 'type' in prev_bonus and 'type' in bonus_dict and \
+                    prev_bonus['type'] == bonus_dict['type']:
+                        #Leave previous bonus as it is
+                        bonus_dict = None
+                       
+            if bonus_dict: 
+                #convert the date to a string
+                bonus_dict['retrieved'] = sight.retrieved.strftime('%Y-%m-%d %H:%M:%S')
+                bonus_list.append(bonus_dict)
+                       
+        if len(bonus_list) > 0: 
+            return str(bonus_list)
+    else:
+        return sight.bonuses #leave it unchanged
+    
+    return None
+    
+def long_time_no_see(last_seen_date):
+    """
+    Return True if it has been over the time limit since we last saw this bike
+    else False
+    """
+    if last_seen_date < datetime.now() - timedelta(hours=2):
+        #it's been a while
+        return True
+
+    return False
+    
+    
 if __name__ == '__main__':
     run()
 
