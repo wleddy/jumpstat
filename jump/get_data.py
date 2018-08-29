@@ -9,6 +9,7 @@ import json
 from datetime import datetime, timedelta
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
+from jump.jump_utils import long_time_no_see, miles_traveled
 from users.utils import printException
 import ast
 
@@ -124,7 +125,7 @@ def get_jump_data():
             
             #Get the last time we saw this bike
             where = 'jump_bike_id = {}'.format(bike.jump_bike_id)
-            order_by = 'retrieved desc'
+            order_by = 'id desc' # should be by datetime, but there are issues
 
             sight = sightings.select_one(where=where, order_by=order_by)
             if not sight:
@@ -135,7 +136,7 @@ def get_jump_data():
                 
             if long_time_no_see(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f')):
                 #This bike has been off getting service
-                sightings.save(new_sighting(sightings,ob,returned_to_service=1))
+                sightings.save(new_sighting(sightings,ob),returned_to_service=1)
                 new_data['sighting'] += 1
                 continue
                 
@@ -203,27 +204,6 @@ def alert_admin(mes):
             body = mes,
             )
 
-from math import radians, cos, sin, asin, sqrt
-def miles_traveled(lng1, lat1, lng2, lat2):
-    """
-    Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees)
-    """
-    if lng1 == None or lng2 == None or lat1 == None or lat2 == None:
-        return 0
-        
-    # convert decimal degrees to radians 
-    lng1, lat1, lng2, lat2 = map(radians, [lng1, lat1, lng2, lat2])
-    # haversine formula 
-    dlon = lng2 - lng1 
-    dlat = lat2 - lat1 
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a)) 
-    # Radius of earth in kilometers is 6371
-    km = 6371 * c
-    
-    mi = km * 0.6213712 #convert to miles
-    return mi
     
 def new_sighting(sightings,data,**kwargs):
     """
@@ -260,6 +240,9 @@ def update_sighting(data,sight):
     """
     sight.retrieved = data.get('retrieved',datetime.now())
     sight.day_number = day_number()
+    ## Don't think I want to update the batt level between new sightings
+    #sight.batt_level = data.get('batt_level',None)
+    #sight.batt_distance = data.get('batt_distance',None)
     sight.bonuses = get_bonuses(data.get('bonuses',sight.bonuses),sight)
     
     return sight
@@ -337,16 +320,6 @@ def get_bonuses(bonuses,sight):
     
     return None
     
-def long_time_no_see(last_seen_date):
-    """
-    Return True if it has been over the time limit since we last saw this bike
-    else False
-    """
-    if last_seen_date < datetime.now() - timedelta(hours=2):
-        #it's been a while
-        return True
-
-    return False
     
     
 if __name__ == '__main__':
