@@ -136,7 +136,9 @@ def get_jump_data():
                 
             if long_time_no_see(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f')):
                 #This bike has been off getting service
-                sightings.save(new_sighting(sightings,ob),returned_to_service=1)
+                sight = new_sighting(sightings,ob,returned_to_service=1)
+                sightings.save(sight)
+                #print('Returned to service: {}'.format(sight))
                 new_data['sighting'] += 1
                 continue
                 
@@ -147,9 +149,13 @@ def get_jump_data():
                 origin_id = sight.id
                 sight = new_sighting(sightings,ob)
                 sightings.save(sight)
+                #print('New Trip Sighting: {}'.format(sight))
+                
                 new_data['sighting'] += 1
                 # Make a trip
-                trips.save(new_trip(trips,bike.jump_bike_id,origin_id,sight.id,distance))
+                trip = new_trip(trips,bike.jump_bike_id,origin_id,sight.id,distance)
+                trips.save(trip)
+                #print('New Trip : {}'.format(sight))
                 new_data['trip'] += 1
                 
             else:
