@@ -21,7 +21,11 @@
                                 <p class="dd-menu-divider">Admin</p>
                                 {% for item in g.admin.permissions %}
                                     {% if g.admin.has_access(g.user,item['table'])%}
-                                    <li><a href="{{item['url']}}">{{item['display_name']}}</a></li>
+                                        {% if item['header_row'] == True %}
+                                        <p class="dd-menu-divider">{{item['display_name']}}</p>
+                                        {% else %}
+                                        <li><a href="{{item['url']}}">{{item['display_name']}}</a></li>
+                                        {% endif %}
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}

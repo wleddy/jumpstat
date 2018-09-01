@@ -4,6 +4,7 @@ from flask_mail import Mail
 from users.database import Database
 from users.models import User,Role,init_db, Pref
 from users.admin import Admin
+from news.models import Article
 
 # Create app
 app = Flask(__name__, instance_relative_config=True)
@@ -47,6 +48,8 @@ def _before():
         g.admin.register(Role,url_for('role.display'),display_name='Roles',minimum_rank_required=1000)
         g.admin.register(Pref,url_for('pref.display'),display_name='Prefs',minimum_rank_required=1000)
 
+        g.admin.register(Article,url_for('news.display'),header_row=True,display_name='News',minimum_rank_required=500)
+        g.admin.register(Article,url_for('news.display'),minimum_rank_required=500)
 
 @app.teardown_request
 def _teardown(exception):
@@ -69,6 +72,9 @@ app.register_blueprint(jump.mod)
 
 from mapping.views import maps
 app.register_blueprint(maps.mod)
+
+from news.views import news
+app.register_blueprint(news.mod)
 
 if __name__ == '__main__':
     with app.app_context():
