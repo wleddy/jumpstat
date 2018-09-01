@@ -119,10 +119,11 @@ def get_report_data():
        #make a cities list plus one element for monthly totals
     totals_title = "Network Wide *" # used when displaying data
     cities = ['Davis','Sacramento','West Sacramento',totals_title]
-    network_wide_bikes_available = 0
     
     #for this month and last month
     for x in range(0,2):
+        #import pdb;pdb.set_trace()
+        network_wide_bikes_available = 0
         now = datetime.now().replace(month=datetime.now().month - x)
         dr = calendar.monthrange(now.year,now.month) # -> `(first day_number, number of last day)`
         start_date = now.replace(day=1)
@@ -136,13 +137,13 @@ def get_report_data():
         rec = g.db.execute('select min(retrieved) as first, max(retrieved) as last from sighting where retrieved >= "{start_date}" and retrieved <= "{end_date}"'.format(start_date=start_date_str,end_date=end_date_str)).fetchone()
         if rec and rec['first'] != None and rec['last'] != None:
             # Get the number of days in this date range
-            days_in_month = int(rec['last'][8:10]) - (int(rec['first'][8:10])) + 1
-            if days_in_month < 1:
-                days_in_month = 1 #protect against divide by zero
+            days_to_average_over = int(rec['last'][8:10]) - (int(rec['first'][8:10])) + 1
+            if days_to_average_over < 1:
+                days_to_average_over = 1 #protect against divide by zero
 
             monthly_data = {}
             monthly_data['month_name'] = month_name
-            monthly_data['days_in_month'] = days_in_month
+            monthly_data['days_to_average_over'] = days_to_average_over
             monthly_data['cities'] = []
             # Get bikes and trips observed for all cities
             for current_city in cities:
@@ -182,10 +183,9 @@ def get_report_data():
                     """
                     #import pdb;pdb.set_trace()
                     day_adjust = 0
-                    if datetime.now().day < end_date.day and days_in_month >= 2:
+                    if start_date.day < end_date.day and days_to_average_over >= 2:
                         #get the data for just the full days of this month
-                        avg_date = datetime.now().replace(day=datetime.now().day -1)
-                        avg_end_date_str = avg_date.strftime('%Y-%m-%d')
+                        avg_end_date_str = end_date.strftime('%Y-%m-%d')
                         sql = get_sql_for_bikes_and_trips().format(city_clause=city_clause,start_date=start_date_str,end_date=avg_end_date_str)
                         avg_rec = g.db.execute(sql).fetchone()
                         if avg_rec:
@@ -198,13 +198,13 @@ def get_report_data():
                             day_adjust = 0
                     else:
                         # to avoid divide by zero error
-                        # This should only happen during the first day of data collection
+                        # This should only happen during the first day of data collection each month
                         city_dict['trips_per_day'] = 'N/A'
                         city_dict['trips_per_bike_per_day'] = 'N/A'
                     
-                    if days_in_month >= 2:
-                        city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_in_month - day_adjust), 2)) 
-                        city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_in_month - day_adjust) / city_bikes), 2))
+                    if days_to_average_over >= 2:
+                        city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_to_average_over - day_adjust), 2)) 
+                        city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_to_average_over - day_adjust) / city_bikes), 2))
                     
                     monthly_data['cities'].append(city_dict)
                     
