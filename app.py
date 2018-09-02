@@ -50,6 +50,7 @@ def _before():
 
         g.admin.register(Article,url_for('news.display'),header_row=True,display_name='News',minimum_rank_required=500)
         g.admin.register(Article,url_for('news.display'),minimum_rank_required=500)
+        g.admin.register(Article,url_for('news.edit'),display_name='Add Article',minimum_rank_required=500)
 
 @app.teardown_request
 def _teardown(exception):
@@ -81,9 +82,12 @@ if __name__ == '__main__':
         init_db(get_db())
         
         # create the jump tables
-        from jump.models import init_tables
-        init_tables(get_db())
+        import jump.models
+        jump.models.init_tables(get_db())
         
+        import news.models
+        news.models.init_tables(get_db())
+            
         get_db().close()
         
         
