@@ -102,13 +102,6 @@ def get_report_data():
        #make a cities list plus one element for monthly totals
     totals_title = "Network Wide *" # used when displaying data
     #cities = ['Davis','Sacramento','West Sacramento',totals_title]
-    # get a list of all the cities we actually saw bikes in
-    city_recs = g.db.execute('select distinct city from sighting order by city')
-    cities = []
-    for city in city_recs:
-        cities.append(city['city'])
-        
-    cities.append(totals_title)
     
     #for this month and last month
     for x in range(0,2):
@@ -122,6 +115,15 @@ def get_report_data():
         start_date_str = start_date.strftime('%Y-%m-%d')
         end_date_str = end_date.strftime('%Y-%m-%d')
 
+        # get a list of all the cities we actually saw bikes in
+        sql = 'select distinct city from sighting where retrieved >= "{start_date}" and retrieved <= "{end_date}" order by city'.format(start_date=start_date_str,end_date=end_date_str)
+        city_recs = g.db.execute(sql)
+        cities = []
+        for city in city_recs:
+            cities.append(city['city'])
+        
+        cities.append(totals_title)
+        
         # First test is there are any sightings for this month
         #import pdb;pdb.set_trace()
         rec = g.db.execute('select min(retrieved) as first, max(retrieved) as last from sighting where retrieved >= "{start_date}" and retrieved <= "{end_date}"'.format(start_date=start_date_str,end_date=end_date_str)).fetchone()
@@ -195,7 +197,10 @@ def get_report_data():
                         # This should only happen during the first day of data collection each month
                         city_dict['trips_per_day'] = 'N/A'
                         city_dict['trips_per_bike_per_day'] = 'N/A'
-                    
+                        
+                    if city_bikes <=0:
+                        city_bikes = 1 # Protect against divide by zero
+                        
                     if days_to_average_over >= 2:
                         city_dict['trips_per_day'] = '{:.2f}'.format(round(city_trips / (days_to_average_over - day_adjust), 2)) 
                         city_dict['trips_per_bike_per_day'] = '{:.2f}'.format(round((city_trips /  (days_to_average_over - day_adjust) / city_bikes), 2))
