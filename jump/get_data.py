@@ -67,7 +67,9 @@ def get_jump_data():
         size = app.config['JUMP_REQUEST_SIZE']
         network = app.config['JUMP_NETWORK_ID']
         shapes_list = get_shape_list()
-    
+        if not shapes_list:
+            # most likely the json files don't exist or are in the wrong place
+            alert_admin("Error: No shape files were found when trying to get shapes_list in jump.get_data")
         # I now have 2 Jump accounts to use for polling the server, so I can poll more often
         # if the minutes are odd, or even...
     
@@ -208,7 +210,7 @@ def alert_admin(mes):
         # send an email to admin
         sent,msg = send_message(
             None,
-            subject="Error Getting Jump Data",
+            subject="Error Getting Jump Data at {}".format(app.config['HOST_NAME'],),
             body = mes,
             )
 
@@ -233,8 +235,6 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec.lat = data.get('lat',None)
     rec.returned_to_service = returned_to_service
     rec.city = get_city(shapes_list,rec.lng,rec.lat)
-    if app.config['DEBUG']:
-        print('city: {}, address: {}'.format(rec.city,rec.address,))
     rec.batt_level = data.get('ebike_battery_level',None)
     rec.batt_distance = data.get('ebike_battery_distance',None)
     rec.hub_id = data.get('hub_id',None)
