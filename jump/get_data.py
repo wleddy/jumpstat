@@ -12,7 +12,8 @@ from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from jump.jump_utils import long_time_no_see, miles_traveled
 from users.utils import printException
 import ast
-
+from shapely.geometry import Point, shape
+from mapping.shapes import get_shape_list
 
 # Sample request data:
 # {
@@ -65,6 +66,7 @@ def get_jump_data():
         #network = 165
         size = app.config['JUMP_REQUEST_SIZE']
         network = app.config['JUMP_NETWORK_ID']
+        shapes_list = get_shape_list()
     
         # I now have 2 Jump accounts to use for polling the server, so I can poll more often
         # if the minutes are odd, or even...
@@ -106,7 +108,7 @@ def get_jump_data():
             bike = bikes.select_one(where=sql)
             new_data['available'] += 1
             
-            city = get_city(lng,lat)
+            city = get_city(shapes_list,lng,lat)
             if city in avail_city_data:
                 avail_city_data[city] += 1
             else:
@@ -119,7 +121,7 @@ def get_jump_data():
                 bike.name = ob.get('name',None)
                 bikes.save(bike)
                 new_data['bike'] += 1
-                sightings.save(new_sighting(sightings,ob))
+                sightings.save(new_sighting(sightings,ob,shapes_list))
                 new_data['sighting'] += 1
                 continue
             
@@ -130,13 +132,13 @@ def get_jump_data():
             sight = sightings.select_one(where=where, order_by=order_by)
             if not sight:
                 #This should really never happen...
-                sightings.save(new_sighting(sightings,ob))
+                sightings.save(new_sighting(sightings,ob,shapes_list))
                 new_data['sighting'] += 1
                 continue
                 
             if long_time_no_see(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f')):
                 #This bike has been off getting service
-                sight = new_sighting(sightings,ob,returned_to_service=1)
+                sight = new_sighting(sightings,ob,shapes_list,returned_to_service=1)
                 sightings.save(sight)
                 #print('Returned to service: {}'.format(sight))
                 new_data['sighting'] += 1
@@ -147,7 +149,7 @@ def get_jump_data():
             if distance >= 0.128:
                 #bike moved at least 1/8 mile
                 origin_id = sight.id
-                sight = new_sighting(sightings,ob)
+                sight = new_sighting(sightings,ob,shapes_list)
                 sightings.save(sight)
                 #print('New Trip Sighting: {}'.format(sight))
                 
@@ -211,7 +213,7 @@ def alert_admin(mes):
             )
 
     
-def new_sighting(sightings,data,**kwargs):
+def new_sighting(sightings,data,shapes_list,**kwargs):
     """
     Create a new sighting record object and return it.
     data is single row of the Jump Bike response object
@@ -230,7 +232,9 @@ def new_sighting(sightings,data,**kwargs):
     rec.lng = data.get('lng',None)
     rec.lat = data.get('lat',None)
     rec.returned_to_service = returned_to_service
-    rec.city = get_city(rec.lng,rec.lat)
+    rec.city = get_city(shapes_list,rec.lng,rec.lat)
+    if app.config['DEBUG']:
+        print('city: {}, address: {}'.format(rec.city,rec.address,))
     rec.batt_level = data.get('ebike_battery_level',None)
     rec.batt_distance = data.get('ebike_battery_distance',None)
     rec.hub_id = data.get('hub_id',None)
@@ -268,25 +272,22 @@ def new_trip(trips,bike_id,origin_id,destination_id,distance):
 def day_number():
     return int(datetime.now().strftime('%Y%m%d'))
     
-def get_city(lng,lat):
+def get_city(shapes_list,lng,lat):
     """
     Return the name of the city where we found this bike
-    """
-    #Set up the bounderies
-    ###############################
-    # Use the lng to determine what city the bike is in.
-    # Crude but simple
-    eastern_davis_boundry = -121.618708 # Davis, West Sac Boundery
-    eastern_west_sac_boundry = -121.507909 # Sac, west Sac boundry
-        
-    #determine the city for this sighting
-    if lng <= eastern_davis_boundry:
-        city = "Davis"
-    elif lng <= eastern_west_sac_boundry:
-        city = "West Sacramento"
-    else:
-        city = "Sacramento"
     
+    9/3/18 - Now use mapping.shapes.get_shape_list to provide
+    a list of dictionaries with shapely shape objects to test 
+    to see if the bike is in there
+    
+    """
+    city = "Unknown"
+    point = Point(lng,lat) # longitude, latitude
+    for city_dict in shapes_list:
+        if shape(city_dict['shape']).contains(point):
+            city = city_dict['city_name']
+            break
+            
     return city
     
     

@@ -1,4 +1,4 @@
-##Notes on mapping
+##Notes on using shapefiles
 
 I'm attempting a really simple approach to using information from shapefiles to determine the city in which a 
 bike is located.
@@ -12,6 +12,12 @@ The script `shapefile_to_json.py` reads the .shp files created by the service an
 
 The usage of the script is: 
     `python shapefile_to_json.py <path to shp file> <city name> <output directory :defaults to mapping/json/>`
+    
+Alternately, for a very simple map area you could use one of the json files as a template and just enter some points to
+describe the area.
+
+By naming the json files to sort into a particular order, the point will be tested in that order and it may save a little 
+time when searching for a match.
 
 When the data is needed the shapely module is used to convert the json data to a shape that can be tested for the
 existance of a point.
