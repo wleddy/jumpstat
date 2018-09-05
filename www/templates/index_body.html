@@ -1,0 +1,262 @@
+{% if rendered_html %}
+{{ rendered_html | safe() }}
+{% endif %}
+<style>
+    #summary_data {
+        border: 3pt solid #ddd;
+        width:20em;
+        padding:10pt;
+        margin-top:10pt;"
+    }
+    .num {
+        text-align:right;
+    }
+    th {
+        font-weight:800;
+        background-color:#ddd;
+        max-width:8em;
+    }
+    .city_column_2, .city_column {
+        min-width:10em;
+        max-width:10em;
+    }
+    .num {
+        min-width:5em;
+        max-width:5em;
+    }
+    th.city_column_2, th.city_column, th.label_column {
+        height:2.2em;
+    }
+    /* for desktop  */
+
+   div#monthly_data table { 
+        padding:0pt;
+    }
+
+    .city_column_2{ 
+        display:none;
+    }
+
+    div#monthly_data table {
+        display:inline-block;
+    }
+
+    #table_2 {
+        position:relative;
+        left:-5pt;
+    }
+    #table_3 {
+        position:relative;
+        left:-10pt;
+    }
+    #table_4 {
+        position:relative;
+        left:-15pt;
+    }
+    #table_5 {
+        position:relative;
+        left:-20pt;
+    }
+
+    /* For Mobile   */
+
+    @media only screen 
+      and (min-device-width: 375px) 
+      and (max-device-width: 667px) 
+      and (-webkit-min-device-pixel-ratio: 2)  {
+        #summary_data {
+          width:18em;
+        }
+        div#monthly_data table {
+            margin:2em, 0;
+        }
+        .city_column_2{ 
+            display:block;
+        }
+
+        div#monthly_data table {
+            display:block;
+            margin:10pt 0;
+
+        }
+        #table_2, #table_3, #table_4, #table_5 {
+            position:static;
+        }
+    }
+</style>
+
+<div id="summary_data" >
+    <h4 style="margin-bottom:6pt;">Summary Report:</h4>
+    <p class="caption" style="font-style:italic;font-size:90%;">(Latest data retrieval: {{data.retrieval_date}})</p>
+    <p>Total Bikes: {{ data.bikes }}</p>
+    <p>Bikes Currently Available: {{ data.available }}</p>
+    <p>Total Trips: {{ data.trips }}</p>
+</div>
+
+<div>
+    {% if report_data %}
+        <h3>Monthly Report</h3>
+        {% for month in report_data %}
+        <h4>Data for {{ month['month_name']}}</h4>
+
+        <div id="monthly_data">    
+            <!--
+            <table id="table_1">
+                <tr>
+                    <th class="city_column">City</th>
+                    <th class="label_column">Bikes Observed**</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column">{{ city['city'] }}</td>
+                    <td class="num">{{ city['city_bikes'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            -->
+            <table id="table_1">
+                <tr>
+                    <th class="city_column ">City</th>
+                    <th class="label_column">Trips Taken</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column">{{ city['city'] }}</td>
+                    <td class="num">{{ city['city_trips'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_2">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Median Bikes Available</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['avg_bikes_available'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_3">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Trips per day</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['trips_per_day'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <table id="table_4">
+                <tr>
+                    <th class="city_column_2">City</th>
+                    <th class="label_column">Trips per day per bike</th>
+                </tr>
+                {% for city in month['cities'] %}
+                <tr>
+                    <td class="city_column_2">{{ city['city'] }}</td>
+                    <td class="num">{{ city['trips_per_bike_per_day'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            
+            <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">
+                * Network Wide counts may not equal the total of all 
+                city counts because some trips end in a city other than the one they started in.
+                <!-- <br>
+                ** Bikes Observed is unique bikes seen at least once within the city during the 
+                report period.
+                -->
+            </p>
+        </div>
+        {% endfor %}
+    {% else %}
+    <h3>Sorry, there is no data to display</h3>
+    {% endif %}
+</div>
+{% if hourly_graph_html and hourly_data %}
+    <style>
+        #hourly-graph-contain {
+            margin:20px auto;
+            width:400px;
+        }
+    </style>
+<h3>Hourly Usage</h3>
+<p>
+    
+    {% if hourly_data['days'] > 1 %}
+    Average of number Bikes available vs. Trips taken by hour over the last {{hourly_data['days'] }} days.
+    {% else %}
+    Number of Bikes available vs. Trips taken by hour over the last 24 hours.
+    {% endif %}<br>
+    {{ hourly_data['start_date'] }} to {{ hourly_data['end_date'] }}
+
+</p>
+    
+
+<div id="hourly-graph-contain">
+    {{ hourly_graph_html | safe() }}
+    <div id="hourly-graph-ledgend">
+        <style>
+            #hourly-graph-ledgend p {
+                text-align:center;
+                font-size:11px;
+                width:230px;
+                border: .5pt solid #aaa;
+                padding:3pt;
+                margin:10pt auto;
+            }
+            #hourly-graph-ledgend p span {
+                font-size:inherit;
+            }
+        </style>
+        <p>Bikes available: <span class="bike-color-box">&nbsp;</span>&nbsp;&nbsp;Trips taken: <span class="trip-color-box">&nbsp;</span></p>
+    </div>
+    
+</div>
+{% endif %}
+{% if hourly_data %}
+<style>
+    #hourly-table {display:none;}
+    div#hourly-table table th:first-child, td {
+        text-align:right;
+    }
+    
+</style>
+<p class="script-link" onclick="$('#hourly-table').toggle();">Show me the data...</p>
+<div id="hourly-table">
+    <table>
+        <tr>
+            <th>Hour:</th>
+            {% for hour in hourly_data['hours'] %}
+            {% if hour == 0 %}
+            {% set hour = 'Mid'%}
+            {% endif %}
+            {% if hour == 12 %}
+            {% set hour = 'Noon'%}
+            {% endif %}
+            <th>
+                {{ hour }}
+            </th>
+            {% endfor %}
+        </tr>
+        <tr>
+            <th>Trips:</th>
+         {% for trip in hourly_data['trips'] %}
+          <td>{{ trip }}</td>
+       {% endfor %}
+       </tr>
+       <th>Bikes avail.:</th>
+         {% for bike in hourly_data['bikes'] %}
+          <td>{{ bike }}</td>
+       {% endfor %}
+    </table>
+</div> 
+<p><a href="{{ url_for('maps.time_lapse_map')}}">Show me a map...</a></p>
+
+{% else %}
+<p>Sorry, no hourly data.</p>
+{% endif %}

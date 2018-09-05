@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block title %}{{ g.title }}{% endblock %}
+{% block body %}
+{% if content %}
+    {{ content | safe() }}
+{% else %}
+    <p>Sorry, That page is not currently available.</p>
+{% endif %}
+{% endblock body %}

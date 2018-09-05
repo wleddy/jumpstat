@@ -1,14 +1,13 @@
 from flask import request, session, g, redirect, url_for, abort, \
      render_template, flash, Blueprint, Response
 from users.admin import login_required, table_access_required
+from users.models import Pref
 from users.utils import render_markdown_for
 from jump.models import Sighting, Trip, Bike
 from jump.views import jump, hourly_graph
 from datetime import datetime, timedelta
 import calendar
 from statistics import median
-import mistune # for Markdown rendering
-import os
 
 mod = Blueprint('www',__name__, template_folder='../templates', url_prefix='')
 
@@ -22,22 +21,45 @@ def setExits():
 @mod.route('/')
 def home():
     setExits()
-
-    rendered_html = render_markdown_for(__file__,mod,'index.md')
-    report_data = get_report_data()
-    summary_data = jump.make_data_dict()
-    hourly_data = hourlies(1)
-    hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
     
+    page_name = "cache_home_page"
+    cache = Pref(g.db).select_one(where='name = "{}"'.format(page_name,))
+    # see if the page is in cache
+    if cache and cache.expires[:19] >= datetime.now().isoformat(sep=" ")[:19]:
+        # deliver from cache
+        content=cache.value
+    else:
+        #otherwise render a new page and save it to cache
+        rendered_html = render_markdown_for(__file__,mod,'index.md')
+        report_data = get_report_data()
+        summary_data = jump.make_data_dict()
+        hourly_data = hourlies(1)
+        hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
     
-    return render_template('index.html',
-        rendered_html=rendered_html, 
-        data=summary_data,
-        report_data=report_data, 
-        hourly_data=hourly_data,
-        hourly_graph_html=hourly_graph_html,
-        )
-
+        content = render_template('index_body.html',
+            rendered_html=rendered_html, 
+            data=summary_data,
+            report_data=report_data, 
+            hourly_data=hourly_data,
+            hourly_graph_html=hourly_graph_html,
+            )
+    
+        if not cache:
+            cache = Pref(g.db).new()
+        
+        cache.name = page_name
+        cache.value = content
+        expires = datetime.now() + timedelta(seconds=60 * 5) # cache for 5 minutes
+        cache.expires = expires.isoformat(sep=" ")[:19]
+        Pref(g.db).save(cache)
+        
+        try:
+            g.db.commit()
+        except:
+            g.db.rollback()
+            #satify without saving to cache
+                
+    return render_template('body_from_cache.html',content=content)
 
 @mod.route('/about', methods=['GET',])
 @mod.route('/about/', methods=['GET',])
