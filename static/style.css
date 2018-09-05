@@ -379,6 +379,11 @@ div#footer {
 div#footer > p {
     font-size:80%;
 }
+
+.markdown ol, .markdown ul {
+    margin-left:1.5em;
+    margin-bottom:.5em;
+}
 /*
 @media screen and (max-width: 680px){
 */
