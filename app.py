@@ -27,6 +27,8 @@ def get_db(filespec=app.config['DATABASE_PATH']):
         g.db = Database(filespec).connect()
     return g.db
 
+from users.jinja_filters import register_jinja_filters
+register_jinja_filters(app)
 
 @app.before_request
 def _before():
