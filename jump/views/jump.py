@@ -15,8 +15,10 @@ def setExits():
 @silent_login()
 def get_data():
     setExits()
-    from jump.get_data import get_jump_data
-    result = get_jump_data()
+    #from jump.get_data import get_jump_data
+    #result = get_jump_data()
+    from jump.get_GBFS_data import get_gbfs_data
+    result = get_gbfs_data()
     data = make_data_dict()
     return render_template('jump_data_response.html', result=result, data=data)
     
