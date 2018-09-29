@@ -94,7 +94,7 @@ class AvailableBikeCount(SqliteTable):
         sql = """
             bikes_available NUMBER,
             retrieved DATETIME,
-            city, TEXT,
+            city TEXT,
             day_number INTEGER
             """
         super().create_table(sql)
