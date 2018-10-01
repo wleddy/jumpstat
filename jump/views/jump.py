@@ -2,6 +2,7 @@ from flask import request, session, g, redirect, url_for, abort, \
      render_template, flash, Blueprint
 from users.admin import login_required, table_access_required, silent_login
 from jump.models import Bike, Sighting, Trip
+from datetime import datetime, timedelta
 
 mod = Blueprint('jump',__name__, template_folder='../templates', url_prefix='/jump')
 
@@ -28,7 +29,10 @@ def make_data_dict(data=None):
     if not data or type(data) is not dict:
         data = {}
     
-    data['bikes'] = get_result_count(g.db.execute('select id from bike').fetchall())
+    # limit bike count to last 2 days
+    start_date = (datetime.now() - timedelta(days=2)).isoformat(sep=' ')
+    end_date = datetime.now().isoformat(sep=' ')
+    data['bikes'] = get_result_count(g.db.execute('select distinct jump_bike_id from sighting where retrieved >= "{}" and retrieved <= "{}"'.format(start_date,end_date,)).fetchall())
     data['sightings'] = get_result_count(g.db.execute('select id from sighting').fetchall())
     data['trips'] = get_result_count(g.db.execute('select id from trip').fetchall())
     data['available'] = 0

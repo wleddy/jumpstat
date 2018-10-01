@@ -88,9 +88,10 @@
 <div id="summary_data" >
     <h4 style="margin-bottom:6pt;">Summary Report:</h4>
     <p class="caption" style="font-style:italic;font-size:90%;">(Latest data retrieval: {{data.retrieval_date}})</p>
-    <p>Total Bikes: {{ data.bikes }}</p>
+    <p>Total Bikes: {{ data.bikes }}&nbsp;&loz;</p>
     <p>Bikes Currently Available: {{ data.available }}</p>
     <p>Total Trips: {{ data.trips }}</p>
+    <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">&loz; Unique bikes active on system in last 2 days.</p>
 </div>
 
 <div>
@@ -100,20 +101,6 @@
         <h4>Data for {{ month['month_name']}}</h4>
 
         <div id="monthly_data">    
-            <!--
-            <table id="table_1">
-                <tr>
-                    <th class="city_column">City</th>
-                    <th class="label_column">Bikes Observed**</th>
-                </tr>
-                {% for city in month['cities'] %}
-                <tr>
-                    <td class="city_column">{{ city['city'] }}</td>
-                    <td class="num">{{ city['city_bikes'] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            -->
             <table id="table_1">
                 <tr>
                     <th class="city_column ">City</th>
