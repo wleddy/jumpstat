@@ -200,6 +200,8 @@ def get_report_data():
                         
                     """
                     #import pdb;pdb.set_trace()
+                    city_trips = 0
+                    city_bikes = 0
                     day_adjust = 0
                     if start_date.day < end_date.day and days_to_average_over >= 2:
                         #get the data for just the full days of this month
