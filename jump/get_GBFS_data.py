@@ -99,7 +99,7 @@ def get_gbfs_data():
             bike = bikes.select_one(where=sql)
             new_data['available'] += 1
             
-            city = get_city(shapes_list,lng,lat)
+            city = get_city(lng,lat,shapes_list)
             if city in avail_city_data:
                 avail_city_data[city] += 1
             else:
@@ -214,7 +214,7 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec.lng = data.get('lon',None)
     rec.lat = data.get('lat',None)
     rec.returned_to_service = returned_to_service
-    rec.city = get_city(shapes_list,rec.lng,rec.lat)
+    rec.city = get_city(rec.lng,rec.lat,shapes_list)
     rec.batt_level = data.get('jump_ebike_battery_level',None)
     #rec.batt_distance = data.get('ebike_battery_distance',None)
     #rec.hub_id = data.get('hub_id',None)
@@ -252,7 +252,7 @@ def new_trip(trips,bike_id,origin_id,destination_id,distance):
 def day_number():
     return int(datetime.now().strftime('%Y%m%d'))
     
-def get_city(shapes_list,lng,lat):
+def get_city(lng,lat,shapes_list=None):
     """
     Return the name of the city where we found this bike
     
@@ -260,14 +260,41 @@ def get_city(shapes_list,lng,lat):
     a list of dictionaries with shapely shape objects to test 
     to see if the bike is in there
     
+    10/1/18 - If city can't be found in shape files, try reverse geocode lookup
+    
     """
-    city = "Unknown"
-    point = Point(lng,lat) # longitude, latitude
-    for city_dict in shapes_list:
-        if shape(city_dict['shape']).contains(point):
-            city = city_dict['city_name']
-            break
+    city = None
+    
+    if shapes_list:
+        point = Point(lng,lat) # longitude, latitude
+        for city_dict in shapes_list:
+            if shape(city_dict['shape']).contains(point):
+                city = city_dict['city_name']
+                break
             
+    if not city:
+        #attempt geocode lookup
+        url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={}&lon={}&zoom=18&addressdetails=1".format(lat,lng,)
+        try:
+            geo_data = requests.get(url).text
+            #convert data from json
+            geo_data = json.loads(geo_data)
+            #look in address:{..., "city":'XXXXXX',...}
+            add = geo_data.get('address',None)
+            city = add.get('city',None)
+            if not city:
+                #Not technically in the city?
+                city = add.get('county',None)
+        except:
+            # alert on conversion error
+            mes = """An error occured while attempting to convert json data.
+                URL: {}
+                Time: {}
+                Data: {}""".format(url,datetime.now().isoformat(),str(geo_data))
+            alert_admin(mes)
+
+    if not city:
+        city = "Unknown"
     return city
     
     

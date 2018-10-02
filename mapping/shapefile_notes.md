@@ -22,3 +22,10 @@ time when searching for a match.
 When the data is needed the shapely module is used to convert the json data to a shape that can be tested for the
 existance of a point.
 
+
+### Update: 10/01/2018,
+
+In cases were a point is not in a known shape map, use reverse geocoding to try to get the city. 
+See https://wiki.openstreetmap.org/wiki/Nominatim#Reverse_Geocoding for details 
+
+Ex: https://nominatim.openstreetmap.org/reverse?format=json&lat=38.5706316666667&lon=-121.484053333333&zoom=18&addressdetails=1
