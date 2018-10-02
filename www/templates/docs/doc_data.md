@@ -1,6 +1,6 @@
 ## Data Dictionary
 
-The Data dictionary for jumpstat as of Aug. 20, 2018:
+The Data dictionary for jumpstat as of Oct. 1, 2018:
 
 * **Bike** Table
     * **id** INT:
@@ -41,3 +41,12 @@ The location information returned by the API plus some we add
     * **destination_sighting_id** INTEGER: The id of the sighting where the bike re-appeared on the net.
     * **miles** NUMBER: Calculated straight line distance traveled during trip.
     
+ 
+* **AvailableBikeCount** Table  
+    Each time we retrieve data, a record is created for each city in which bikes are found.  
+    Used to determine the median number of bikes available in a city.
+    * **bikes_available** NUMBER: The number of bikes 
+    * **retrieved** DATETIME: The datetime when we received the data.
+    * **city** TEXT: City were bikes were located
+    * **day_number** INTEGER: A calculated value derived from retrieved date as YYYYMMDD
+
