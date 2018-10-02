@@ -76,7 +76,7 @@ def time_lapse_map():
         #print(sql)
         #print('recs = {}'.format(len(recs)))
     #return('Ok')
-    return render_template('JSONmap.html', markerData=markerData)
+    return render_template('JSONmap.html', markerData=markerData,start_date=start_date)
 
 
 @mod.route('/report/mapError', methods=['GET'])

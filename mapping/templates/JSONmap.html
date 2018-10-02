@@ -8,7 +8,7 @@
 
 {% block body %}
 	<h2>{{ g.title }}</h2>
-    <h2 style="text-align:center;"><span id="display_date"></span> <span id="display_time"></span></h2>
+    <h2 style="text-align:center;"><span id="display_date">Date: {{ start_date | short_date_string() }}</span> <span id="display_time"></span></h2>
 	{% if markerData == '' %}
 		<h3>No Map Data Found.</h3>
 	{% endif %}
