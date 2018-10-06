@@ -44,6 +44,7 @@ ALLOW_USERNAME_CHANGE = True
 
 
 # Jump Bike Settings
+JUMP_NETWORK_LONG_NAME = "Sacramento"
 JUMP_NETWORK_NAME = "SAC" # used to locate the mapping.json polygon files to use
 JUMP_GBFS_ROOT_URL = "http://{}.jumpbikes.com/opendata/gbfs.json".format(JUMP_NETWORK_NAME,) # list of data feeds
 
