@@ -46,7 +46,7 @@ class Sighting(SqliteTable):
             hub_id NUMBER,
             day_number NUMBER,
             returned_to_service INT DEFAULT 0,
-            stighted DATETIME,
+            sighted DATETIME,
             bonuses TEXT
             """
         super().create_table(sql)
