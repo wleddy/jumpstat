@@ -21,43 +21,8 @@ def setExits():
 @mod.route('/')
 def home():
     setExits()
+    content = render_home_page_to_cache()
     
-    page_name = "cache_home_page"
-    cache = Pref(g.db).select_one(where='name = "{}"'.format(page_name,))
-    # see if the page is in cache
-    if cache and cache.expires[:19] >= datetime.now().isoformat(sep=" ")[:19]:
-        # deliver from cache
-        content=cache.value
-    else:
-        #otherwise render a new page and save it to cache
-        rendered_html = render_markdown_for(__file__,mod,'index.md')
-        report_data = get_report_data()
-        summary_data = jump.make_data_dict()
-        hourly_data = hourlies(1)
-        hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
-    
-        content = render_template('index_body.html',
-            rendered_html=rendered_html, 
-            data=summary_data,
-            report_data=report_data, 
-            hourly_data=hourly_data,
-            hourly_graph_html=hourly_graph_html,
-            )
-    
-        if not cache:
-            cache = Pref(g.db).new()
-        
-        cache.name = page_name
-        cache.value = content
-        expires = datetime.now() + timedelta(seconds=60 * 5) # cache for 5 minutes
-        cache.expires = expires.isoformat(sep=" ")[:19]
-        Pref(g.db).save(cache)
-        
-        try:
-            g.db.commit()
-        except:
-            g.db.rollback()
-            #satify without saving to cache
                 
     return render_template('body_from_cache.html',content=content)
 
@@ -341,3 +306,49 @@ def hourlies(days_to_report=1):
         return None
 
     
+def render_home_page_to_cache(force=False):
+    """If Home page HTML is not in pref table, render the HTML for the home page and save it to prefs table.
+    Always return the rendered html
+    
+    if force == True, ignore the expiration date and always render the html fresh
+    
+    """
+    
+    page_name = "cache_home_page"
+    cache = Pref(g.db).select_one(where='name = "{}"'.format(page_name,))
+    # see if the page is in cache
+    if cache and cache.expires[:19] >= datetime.now().isoformat(sep=" ")[:19] and force == False:
+        # deliver from cache
+        content=cache.value
+    else:
+        #otherwise render a new page and save it to cache
+        rendered_html = render_markdown_for(__file__,mod,'index.md')
+        report_data = get_report_data()
+        summary_data = jump.make_data_dict()
+        hourly_data = hourlies(1)
+        hourly_graph_html = hourly_graph.hourly_graph(hourly_data)
+    
+        content = render_template('index_body.html',
+            rendered_html=rendered_html, 
+            data=summary_data,
+            report_data=report_data, 
+            hourly_data=hourly_data,
+            hourly_graph_html=hourly_graph_html,
+            )
+    
+        if not cache:
+            cache = Pref(g.db).new()
+        
+        cache.name = page_name
+        cache.value = content
+        expires = datetime.now() + timedelta(seconds=60 * 5) # cache for 5 minutes
+        cache.expires = expires.isoformat(sep=" ")[:19]
+        Pref(g.db).save(cache)
+        
+        try:
+            g.db.commit()
+        except:
+            g.db.rollback()
+            #satify without saving to cache
+    
+    return content

@@ -14,7 +14,7 @@ from mapping.shapes import get_shape_list
 import requests
 from shapely.geometry import Point, shape
 from users.utils import printException
-
+from www.views.home import render_home_page_to_cache
 
 def get_gbfs_data():
     try:
@@ -179,6 +179,9 @@ def get_gbfs_data():
         
         db.commit()
         mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
+        
+        # Update the home page cache with the new data
+        render_home_page_to_cache(force=True)
         
         return(mes)
     
