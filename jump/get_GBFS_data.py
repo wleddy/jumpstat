@@ -29,7 +29,14 @@ def get_gbfs_data():
             # most likely the json files don't exist or are in the wrong place
             alert_admin("Error: No shape files were found when trying to get shapes_list in jump.get_data")
     
-        url = 'https://sac.jumpbikes.com/opendata/free_bike_status.json'
+        # Get free bike status feed url
+        url = get_free_bike_url()
+        if not url:
+            mes = """No Free bike status URL while attempting to import Jump Bike data for {}.
+                Time: {}
+                URL: {}""".format(app.config['JUMP_NETWORK_NAME'],datetime.now().isoformat(),str(url))
+            alert_admin(mes)
+            
         request_data = requests.get(url).text
         if "error" in request_data or '"bikes":' not in request_data: # Not sure what an error looks like
             mes = """An error occured while attempting to import Jump Bike data from {}.
@@ -210,7 +217,7 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec.retrieved = data.get('retrieved',datetime.now())
     rec.sighted = rec.retrieved
     #rec.address = data.get('address',None)
-    #rec.network_id = data.get('network_id',None)
+    rec.network_id = data.get(app.config['JUMP_NETWORK_NAME'],None)
     rec.lng = data.get('lon',None)
     rec.lat = data.get('lat',None)
     rec.returned_to_service = returned_to_service
@@ -298,6 +305,51 @@ def get_city(lng,lat,shapes_list=None):
     return city
     
     
+def get_free_bike_url():
+    """get the url to the free bike list based on the site JUMP_GBFS_ROOT_URL from app.config"""
+        
+    url = app.config['JUMP_GBFS_ROOT_URL']
+    request_data = requests.get(url).text
+    if "error" in request_data or '"feeds":' not in request_data: # Not sure what an error looks like
+        mes = """An error occured while attempting to import Jump Bike feed from {}.
+            Time: {}
+            Error: {}""".format(url,datetime.now().isoformat(),str(request_data))
+        alert_admin(mes)
+    
+        return None
+        
+    #convert data from json
+    try:
+        request_data = json.loads(request_data)
+    except:
+        # alert on conversion error
+        mes = """An error occured while attempting to convert json data.
+            Time: {}
+            Error: {}""".format(datetime.now().isoformat(),str(request_data))
+        alert_admin(mes)
+        
+        return None
+    
+    #Find the free bike url
+    url = None
+    for item in request_data['data']['en']['feeds']:
+        if item.get('name',None) == 'free_bike_status':
+            url = item.get('url',None)
+            break
+            
+    if url:
+        return url
+    else:
+        mes = """No valid feeds were retrievd.
+            Time: {}
+            Error: {}""".format(datetime.now().isoformat(),str(request_data))
+        alert_admin(mes)
+        
+        return None
+    
+    
+    
+# Bonus data not include in current feed
 def get_bonuses(bonuses,sight):
     """
     Return a string version of the bonuses JSON object or None

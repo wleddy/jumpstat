@@ -42,11 +42,16 @@ MAX_CONTENT_LENGTH = 300000
 ## some administrative settings
 ALLOW_USERNAME_CHANGE = True
 
+
+# Jump Bike Settings
+JUMP_NETWORK_NAME = "SAC" # used to locate the mapping.json polygon files to use
+JUMP_GBFS_ROOT_URL = "http://{}.jumpbikes.com/opendata/gbfs.json".format(JUMP_NETWORK_NAME,) # list of data feeds
+
+## some old values. no-longer used
 ## Jump Bike Credentials
 # there must be Exactly 2 tuples in the list, but they can be the same
 JUMP_LOGIN = [("me@example.net","pass"),("you@example.net","pass"),]
 JUMP_NETWORK_ID = 165 # The id of the network you want to get
-JUMP_NETWORK_NAME = "SAC" # used to locate the mapping.json polygon files to use
 JUMP_REQUEST_SECONDS = 15 * 60 #how often to get the jump data
 JUMP_REQUEST_SIZE = 1000 # how many records to try to get. Should be larger than the max number of bikes in the system
 
