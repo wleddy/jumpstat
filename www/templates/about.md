@@ -23,16 +23,16 @@ about what I think this web site does.
 
 #### Data source
 
-The data is provided by Jump Bikes through their "developer API" which is 
-documented [here](https://app.socialbicycles.com/developer/ "Jump Bikes Developer API").
+The data is provided by Jump Bikes using the General Bikeshare Feed Specification which is documented 
+[on Github](https://github.com/NABSA/gbfs "GBFS Spec").
 
 The data received is essentially a list of every bike in the area that is available for rent. This is presumably what
 you see when you use the Jump Bikes app or web site. Just way less pretty.
 
 #### Data retrieval
 
-So that we don't become a total pain, Jump requests that we send a limited number of requests each day. We just about max out our
-ration by making a request about every 9 minutes. So our data should be at worst 8 and a half minutes old.
+The data is updated every 2 minutes. Well, that is to say, I request the data every 2 minutes. If Jump updates their feed 
+less often then that, I can't do anything about it.
 
 #### What is an Available Bike
 
@@ -41,16 +41,14 @@ the app.
 
 #### How do we count Total Bikes
 
-The Total Bikes number is any bike we have ever seen in the data. We don't know if all those bikes are still in service.
-Some may have been damaged, moved to another system or who knows what. The "plan" is to periodically scan the bikes list
-to find any that we haven't seen in a few weeks and remove them from our list.
+The Total Bikes number is a count of any bikes that have been available for rent any any time in the last 2 days.
 
 #### How is a Trip identified
 
 Pretty simple really. The first time we see a bike we make a note of it. The next time we see it in a different location
 we count that as a trip. 
 
-The bikes periodically report thier position to the "Head Office". To avoid small variations in the location reported 
+The bikes periodically report their position to the "Head Office". To avoid small variations in the location reported 
 due to errors in GPS positioning I disregard any change of less than 1/8 mile from the original report. 
 Movements over that distance are recorded as a trip.
 

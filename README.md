@@ -5,11 +5,13 @@ This project is based on my shotglass Flask starter repo. In conjunction with th
 my github account. Shotglass and users provide a very simple framework to start a Flask project with the ability to add and 
 manage users and roles to control access to your app.
 
-By default, the main program file is app.py. App.py expects there to be a python package called 'users' and out-of-the-box 
-won't run without it.
+By default, the main program file is app.py. App.py expects there to be a python packages called 'users' and 'news' and out-of-the-box 
+won't run without them.
 
-The 'users' package is it's own [repository on GitHub](https://github.com/wleddy/users/). All of the database functionality (sqlite3) is in users so the first thing
-you probably want to do is clone users into your new flask app. See "Instructions" below.
+The 'users' and 'news' package have their own repositories on GitHub. You can get them at: [Users](https://github.com/wleddy/users/) and
+[News](https://github.com/wleddy/news/). 
+The core of the database functionality (sqlite3) is in users so the first thing
+you'll want to do is clone users and news into main directory
 
 ## Instructions 
 
@@ -20,19 +22,21 @@ A typical installation would be to:
 * in the terminal run `. setup_env` This will create the instance directory where your private
   stuff is stored and will try to create virtualenv directory 'env' and pip the requirements into it.
   
-* cd into the directory and clone the 'users' repo into it
+* cd into the directory and clone the 'users' and 'news' repos into it
 
 * Assuming everything went Ok, run `. activate_env` to enter your virtual environment.
 
 * Next, edit the file at `instance/site_settings.py` with all your secrets.
 
-* run python app.py to start the dev server and create the initial database.
+* run python app.py to start the dev server and create the initial database. If it starts up with no errors, you're
+good to go. Type control-c to exit the dev server (unless you're actually want to run it there)
 
-* A super user account is created with username "admin" and password "password"
+* A super user account is created with username "admin" and password "password". You can log in at '/login/' and then
+use the menu at the right edge of the screen to change the admin password and create any new users you want.
     
 See below for information on getting data from Jump.
     
-## Special Instructions for A2 Hosting
+## Special Instructions for A2 Hosting (where my sites are hosted)
 
 A2 Hosting uses the `passenger` system to run python apps on their system. `activate_env` will not find the python 
 environment which their system creates for your app.
@@ -63,12 +67,8 @@ Go back to the Python Setup App panel and restart your app or from the terminal 
 ### Getting data from Jump
 
 The method at jump.get_data.get_data needs to be called periodically to download the data from Jump. You can do this from 
-a browser by going to /jump/get_data/. I set up a cron job using curl to periodically do that in the background. I use:
-
-`curl -u "< Your email >:< your password >" "https://app.socialbicycles.com/api/bikes.json?page=1&per_page=1000&network_id=165"`
-
-You will need an account at Jump (just a normal bike share account) and use that email address and password as your 
-credentials to get the data. 
+a browser by going to /jump/get_data/. You'll want to set up a cron job using curl to periodically do that in the background
+but you'll need to submit a username and password each time. This is to stop bots from hitting the update button.
 
 ##### Required packages:
 
@@ -80,4 +80,8 @@ credentials to get the data.
 
 * mistuse for Markdown support
 
+* Shapely and Fiona to help find out what area the bikes are in
+
 * pytest
+
+* plus anything else I forgot to list. See the [requirements.txt](/requirements.txt) for the up-to-date-list.
