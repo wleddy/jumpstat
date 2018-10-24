@@ -23,6 +23,7 @@ def get_gbfs_data():
         #import pdb;pdb.set_trace()
         
         mes = 'No message Yet...'
+        raw_data = "No data fetched yet" #just a place-holder for now
         db = g.db
                 
         shapes_list = get_shape_list()
@@ -38,18 +39,18 @@ def get_gbfs_data():
                 URL: {}""".format(app.config['JUMP_NETWORK_NAME'],local_datetime_now().isoformat(),str(url))
             alert_admin(mes)
             
-        request_data = requests.get(url).text
-        if "error" in request_data or '"bikes":' not in request_data: # Not sure what an error looks like
+        raw_data = requests.get(url).text
+        if "error" in raw_data or '"bikes":' not in raw_data: # Not sure what an error looks like
             mes = """An error occured while attempting to import Jump Bike data from {}.
                 Time: {}
-                Error: {}""".format(url,local_datetime_now().isoformat(),str(request_data))
+                Error: {}""".format(url,local_datetime_now().isoformat(),raw_data)
             alert_admin(mes)
         
             return mes
             
         #convert data from json
         try:
-            request_data = json.loads(request_data)
+            request_data = json.loads(raw_data)
         except:
             # alert on conversion error
             mes = """An error occured while attempting to convert json data.
@@ -137,7 +138,12 @@ def get_gbfs_data():
                 new_data['sighting'] += 1
                 continue
                 
-            if long_time_no_see(make_tz_aware(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f'))):
+            #import pdb;pdb.set_trace()
+            # sight.retrieved is a string so try to convert it to a datetime
+            # Because some dates were stored as time zone aware and some not, just truncat it to seconds
+            prev_sighting_date = datetime.strptime(sight.retrieved[:19],'%Y-%m-%d %H:%M:%S')
+                
+            if long_time_no_see(make_tz_aware(prev_sighting_date)):
                 #This bike has been off getting service
                 sight = new_sighting(sightings,ob,shapes_list,returned_to_service=1)
                 sightings.save(sight)
@@ -187,9 +193,16 @@ def get_gbfs_data():
         return(mes)
     
     except Exception as e:
+        try:
+            mes_data_response = raw_data
+        except:
+            mes_data_response = "No Data Retrieved"
+            
         mes = """An error occured while attempting to fetch bike data.
                 Error: {}
-                """.format(str(e))
+                
+                Data Retrived: {}
+                """.format(str(e),mes_data_response)
         mes = printException(mes,"error",e)
         alert_admin(mes)
         return mes
