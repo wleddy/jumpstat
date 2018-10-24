@@ -5,7 +5,8 @@
 
 from app import app
 import ast
-from datetime import datetime, timedelta
+from datetime import datetime
+from date_utils import local_datetime_now, make_tz_aware
 from flask import g
 import json
 from jump.jump_utils import long_time_no_see, miles_traveled
@@ -34,14 +35,14 @@ def get_gbfs_data():
         if not url:
             mes = """No Free bike status URL while attempting to import Jump Bike data for {}.
                 Time: {}
-                URL: {}""".format(app.config['JUMP_NETWORK_NAME'],datetime.now().isoformat(),str(url))
+                URL: {}""".format(app.config['JUMP_NETWORK_NAME'],local_datetime_now().isoformat(),str(url))
             alert_admin(mes)
             
         request_data = requests.get(url).text
         if "error" in request_data or '"bikes":' not in request_data: # Not sure what an error looks like
             mes = """An error occured while attempting to import Jump Bike data from {}.
                 Time: {}
-                Error: {}""".format(url,datetime.now().isoformat(),str(request_data))
+                Error: {}""".format(url,local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
         
             return mes
@@ -53,7 +54,7 @@ def get_gbfs_data():
             # alert on conversion error
             mes = """An error occured while attempting to convert json data.
                 Time: {}
-                Error: {}""".format(datetime.now().isoformat(),str(request_data))
+                Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
             
             return mes
@@ -62,7 +63,7 @@ def get_gbfs_data():
         if not request_data['data']['bikes']:
             mes = """No bikes were retrievd.
                 Time: {}
-                Error: {}""".format(datetime.now().isoformat(),str(request_data))
+                Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
             
             return mes
@@ -70,7 +71,7 @@ def get_gbfs_data():
         #got data!
         observations = request_data['data']['bikes']
         
-        retrieval_dt = datetime.now()
+        retrieval_dt = local_datetime_now()
         sightings = Sighting(db)
         bikes = Bike(db)
         trips = Trip(db)
@@ -87,7 +88,7 @@ def get_gbfs_data():
             bike_id = ob.get('bike_id',None)
             if not bike_id:
                 mes = """bike_id not in data.
-                    Time: {}""".format(datetime.now().isoformat(),)
+                    Time: {}""".format(local_datetime_now().isoformat(),)
                 alert_admin(mes)
                 continue
                 
@@ -136,7 +137,7 @@ def get_gbfs_data():
                 new_data['sighting'] += 1
                 continue
                 
-            if long_time_no_see(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f')):
+            if long_time_no_see(make_tz_aware(datetime.strptime(sight.retrieved,'%Y-%m-%d %H:%M:%S.%f'))):
                 #This bike has been off getting service
                 sight = new_sighting(sightings,ob,shapes_list,returned_to_service=1)
                 sightings.save(sight)
@@ -178,7 +179,7 @@ def get_gbfs_data():
                 AvailableBikeCount(db).save(avail)
         
         db.commit()
-        mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
+        mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(local_datetime_now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
         
         # Update the home page cache with the new data
         render_home_page_to_cache(force=True)
@@ -217,7 +218,7 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec = sightings.new()
     rec.jump_bike_id = data.get('bike_id',None)
     rec.bike_name = data.get('name',None)
-    rec.retrieved = data.get('retrieved',datetime.now())
+    rec.retrieved = data.get('retrieved',local_datetime_now())
     rec.sighted = rec.retrieved
     #rec.address = data.get('address',None)
     rec.network_id = data.get(app.config['JUMP_NETWORK_NAME'],None)
@@ -238,7 +239,7 @@ def update_sighting(data,sight):
     """
     Update the sighting record with the latest data
     """
-    sight.retrieved = data.get('retrieved',datetime.now())
+    sight.retrieved = data.get('retrieved',local_datetime_now())
     sight.day_number = day_number()
     ## Don't think I want to update the batt level between new sightings
     #sight.batt_level = data.get('batt_level',None)
@@ -260,7 +261,7 @@ def new_trip(trips,bike_id,origin_id,destination_id,distance):
     return trip
     
 def day_number():
-    return int(datetime.now().strftime('%Y%m%d'))
+    return int(local_datetime_now().strftime('%Y%m%d'))
     
 def get_city(lng,lat,shapes_list=None):
     """
@@ -300,7 +301,7 @@ def get_city(lng,lat,shapes_list=None):
             mes = """An error occured while attempting to convert json data.
                 URL: {}
                 Time: {}
-                Data: {}""".format(url,datetime.now().isoformat(),str(geo_data))
+                Data: {}""".format(url,local_datetime_now().isoformat(),str(geo_data))
             alert_admin(mes)
 
     if not city:
@@ -316,7 +317,7 @@ def get_free_bike_url():
     if "error" in request_data or '"feeds":' not in request_data: # Not sure what an error looks like
         mes = """An error occured while attempting to import Jump Bike feed from {}.
             Time: {}
-            Error: {}""".format(url,datetime.now().isoformat(),str(request_data))
+            Error: {}""".format(url,local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
     
         return None
@@ -328,7 +329,7 @@ def get_free_bike_url():
         # alert on conversion error
         mes = """An error occured while attempting to convert json data.
             Time: {}
-            Error: {}""".format(datetime.now().isoformat(),str(request_data))
+            Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
         
         return None
@@ -345,7 +346,7 @@ def get_free_bike_url():
     else:
         mes = """No valid feeds were retrievd.
             Time: {}
-            Error: {}""".format(datetime.now().isoformat(),str(request_data))
+            Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
         
         return None

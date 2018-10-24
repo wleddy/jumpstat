@@ -5,7 +5,8 @@ from users.models import Pref
 from users.utils import render_markdown_for
 from jump.models import Sighting, Trip, Bike
 from jump.views import jump, hourly_graph
-from datetime import datetime, timedelta
+from datetime import timedelta
+from date_utils import local_datetime_now
 import calendar
 from statistics import median
 
@@ -52,7 +53,7 @@ def contact():
             context['name'] = request.form['name']
             context['email'] = request.form['email']
             context['comment'] = request.form['comment']
-            context['date'] = datetime.now().isoformat(sep=" ")
+            context['date'] = local_datetime_now().isoformat(sep=" ")
             print(context)
             send_message(
                 None,
@@ -80,7 +81,6 @@ Disallow: /""" )
 
     
 def get_report_data():
-    now = datetime.now()
     """
     Create some containers for our data
     
@@ -94,7 +94,7 @@ def get_report_data():
     for x in range(0,2):
         #import pdb;pdb.set_trace()
         network_wide_bikes_available = 0
-        now = datetime.now().replace(month=datetime.now().month - x)
+        now = local_datetime_now().replace(month=local_datetime_now().month - x)
         dr = calendar.monthrange(now.year,now.month) # -> `(first day_number, number of last day)`
         start_date = now.replace(day=1)
         month_name = start_date.strftime('%B %Y') # Month Name / Year
@@ -251,7 +251,7 @@ def hourlies(days_to_report=1):
         
     hourly_data = {}
     hourly_data['hours'] = []
-    end_date = datetime.now().replace(minute=0,second=0,microsecond=0) - timedelta(minutes=1)
+    end_date = local_datetime_now().replace(minute=0,second=0,microsecond=0) - timedelta(minutes=1)
     start_date = end_date - timedelta(days=days_to_report) + timedelta(minutes=1)
     hourly_data['start_date'] = start_date.strftime('%B %-d, %Y %-I:%M %p')
     hourly_data['end_date'] = end_date.strftime('%B %-d, %Y %-I:%M %p')
@@ -317,7 +317,7 @@ def render_home_page_to_cache(force=False):
     page_name = "cache_home_page"
     cache = Pref(g.db).select_one(where='name = "{}"'.format(page_name,))
     # see if the page is in cache
-    if cache and cache.expires[:19] >= datetime.now().isoformat(sep=" ")[:19] and force == False:
+    if cache and cache.expires[:19] >= local_datetime_now().isoformat(sep=" ")[:19] and force == False:
         # deliver from cache
         content=cache.value
     else:
@@ -341,7 +341,7 @@ def render_home_page_to_cache(force=False):
         
         cache.name = page_name
         cache.value = content
-        expires = datetime.now() + timedelta(seconds=60 * 5) # cache for 5 minutes
+        expires = local_datetime_now() + timedelta(seconds=60 * 5) # cache for 5 minutes
         cache.expires = expires.isoformat(sep=" ")[:19]
         Pref(g.db).save(cache)
         

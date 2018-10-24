@@ -3,6 +3,7 @@ Some utility functions for jump
 """
 
 from datetime import datetime, timedelta
+from date_utils import local_datetime_now
 from math import radians, cos, sin, asin, sqrt
 
 def long_time_no_see(previous_date,newer_date=None):
@@ -11,7 +12,7 @@ def long_time_no_see(previous_date,newer_date=None):
     else False
     """
     if newer_date == None:
-        newer_date = datetime.now()
+        newer_date = local_datetime_now()
         
     if previous_date <= newer_date - timedelta(hours=2):
         #it's been a while

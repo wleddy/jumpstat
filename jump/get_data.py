@@ -7,6 +7,7 @@ sys.path.append(working_path) ##get import to look one level up
 import requests
 import json
 from datetime import datetime, timedelta
+from date_utils import local_datetime_now
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from jump.jump_utils import long_time_no_see, miles_traveled
@@ -60,7 +61,7 @@ def get_jump_data():
     
         # Use this to determine if bikes have been off the system too long (getting recharged?)
         
-        last_sighting_limit = (datetime.now() - timedelta(hours=2)).isoformat(sep=' ')
+        last_sighting_limit = (local_datetime_now() - timedelta(hours=2)).isoformat(sep=' ')
 
         #size=10
         #network = 165
@@ -73,7 +74,7 @@ def get_jump_data():
         # I now have 2 Jump accounts to use for polling the server, so I can poll more often
         # if the minutes are odd, or even...
     
-        if (datetime.now().minute % 2 == 0): #even 
+        if (local_datetime_now().minute % 2 == 0): #even 
             row = 0
         else: #odd
             row = 1
@@ -87,14 +88,14 @@ def get_jump_data():
             db.close()
             mes = """An error occured while attempting to import Jump Bike data.
                 Time: {}
-                Error: {}""".format(datetime.now().isoformat(),str(request_data))
+                Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
         
             return "Error received while accessing Jump Data: {}".format(str(request_data))
     
         observations = request_data['items']
         
-        retrieval_dt = datetime.now()
+        retrieval_dt = local_datetime_now()
         sightings = Sighting(db)
         bikes = Bike(db)
         trips = Trip(db)
@@ -179,7 +180,7 @@ def get_jump_data():
                 AvailableBikeCount(db).save(avail)
         
         db.commit()
-        mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(datetime.now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
+        mes = 'At {}; New Data added: Available: {}, Sightings: {}, Bikes: {}, Trips: {}'.format(local_datetime_now().isoformat(),new_data['available'],new_data['sighting'],new_data['bike'],new_data['trip'])
         
         return(mes)
     
@@ -227,7 +228,7 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec = sightings.new()
     rec.jump_bike_id = data.get('id',None)
     rec.bike_name = data.get('name',None)
-    rec.retrieved = data.get('retrieved',datetime.now())
+    rec.retrieved = data.get('retrieved',local_datetime_now())
     rec.sighted = rec.retrieved
     rec.address = data.get('address',None)
     rec.network_id = data.get('network_id',None)
@@ -248,7 +249,7 @@ def update_sighting(data,sight):
     """
     Update the sighting record with the latest data
     """
-    sight.retrieved = data.get('retrieved',datetime.now())
+    sight.retrieved = data.get('retrieved',local_datetime_now())
     sight.day_number = day_number()
     ## Don't think I want to update the batt level between new sightings
     #sight.batt_level = data.get('batt_level',None)
@@ -270,7 +271,7 @@ def new_trip(trips,bike_id,origin_id,destination_id,distance):
     return trip
     
 def day_number():
-    return int(datetime.now().strftime('%Y%m%d'))
+    return int(local_datetime_now().strftime('%Y%m%d'))
     
 def get_city(shapes_list,lng,lat):
     """
