@@ -50,10 +50,22 @@ def get_time_zone_setting():
     
 def nowString():
     """Return the timestamp string in the normal format"""
-    return local_datetime_now().isoformat(sep=" ")[:19]
+    return datetime_as_string()
+    
+    
+def datetime_as_string(the_datetime=None):
+    """Return a string version of the datetime provided or for now"""
+    if the_datetime == None:
+        the_datetime = local_datetime_now()
+        
+    return the_datetime.isoformat(sep=" ")[:19]
     
 
 def getDatetimeFromString(dateString):
+    """Try to create a datetime object based on the string provided
+    or else None.
+    The  datetime object returned is time zone aware
+    """
     if type(dateString) is str: # or type(dateString) is unicode:
         pass
     else:
@@ -75,7 +87,6 @@ def getDatetimeFromString(dateString):
         '%y-%m-%d{}%H:%M:%S'.format(timeDelimiter),
         '%Y-%m-%d{}%H:%M'.format(timeDelimiter),
         '%y-%m-%d{}%H:%M'.format(timeDelimiter),
-
         ]
 
     theDate = None
@@ -84,6 +95,12 @@ def getDatetimeFromString(dateString):
             theDate = datetime.strptime(dateString,fmt)
             break
         except Exception as e:
-            theDate = datetime.now()
+            theDate = None
+            
+    if theDate == None:
+        return None
+        
+    # Make datetime aware
+    theDate = timezone(get_time_zone_setting()).localize(theDate)
         
     return theDate.replace(microsecond=0)
