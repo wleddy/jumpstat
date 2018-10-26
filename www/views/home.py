@@ -6,7 +6,7 @@ from users.utils import render_markdown_for
 from jump.models import Sighting, Trip, Bike
 from jump.views import jump, hourly_graph
 from datetime import timedelta
-from date_utils import local_datetime_now
+from date_utils import local_datetime_now, datetime_as_string
 import calendar
 from statistics import median
 
@@ -313,11 +313,17 @@ def render_home_page_to_cache(force=False):
     if force == True, ignore the expiration date and always render the html fresh
     
     """
-    
+    #get the time cache expiration TTL
+    try:
+        from app import app
+        cache_exp_minutes = app.config['JUMP_DATA_CACHE_TTL']
+    except:
+        cache_exp_minutes = 20
+        
     page_name = "cache_home_page"
     cache = Pref(g.db).select_one(where='name = "{}"'.format(page_name,))
     # see if the page is in cache
-    if cache and cache.expires[:19] >= local_datetime_now().isoformat(sep=" ")[:19] and force == False:
+    if cache and cache.expires >= datetime_as_string(local_datetime_now()) and force == False:
         # deliver from cache
         content=cache.value
     else:
@@ -341,8 +347,8 @@ def render_home_page_to_cache(force=False):
         
         cache.name = page_name
         cache.value = content
-        expires = local_datetime_now() + timedelta(seconds=60 * 5) # cache for 5 minutes
-        cache.expires = expires.isoformat(sep=" ")[:19]
+        expires = local_datetime_now() + timedelta(seconds=60 * cache_exp_minutes) # cache TTL
+        cache.expires = datetime_as_string(expires)
         Pref(g.db).save(cache)
         
         try:
