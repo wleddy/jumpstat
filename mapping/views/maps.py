@@ -50,7 +50,7 @@ def time_lapse_map():
                 set opacity to 0
         """
         
-        fmt = '%Y-%m-%d %H:%M:%S.%f'
+        fmt = '%Y-%m-%d %H:%M:%S'
         total_seconds = int(round((end_date - start_date).total_seconds(),0))
         markerData["zoomToFit"] = True
         markerData['total_seconds'] = total_seconds
@@ -59,12 +59,12 @@ def time_lapse_map():
         
         #import pdb;pdb.set_trace()
         for rec in recs:
-            sighted_dt = datetime.strptime(rec['sighted'],fmt)
+            sighted_dt = datetime.strptime(rec['sighted'][:19],fmt)
             if sighted_dt.day == 17:
                 #import pdb;pdb.set_trace()
                 pass
             #print('sighted_dt: {}'.format(sighted_dt))
-            retrieved_dt = datetime.strptime(rec['retrieved'],fmt)
+            retrieved_dt = datetime.strptime(rec['retrieved'][:19],fmt)
             #print('retrieved_dt: {}'.format(retrieved_dt))
             markerData["markers"].append([round(rec['lng'],5),
                                         round(rec['lat'],5),
