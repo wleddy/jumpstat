@@ -90,7 +90,7 @@
     <p class="caption" style="font-style:italic;font-size:90%;">(Latest data retrieval: {{data.retrieval_date}})</p>
     <p>Total Bikes: {{ data.bikes }}&nbsp;&loz;</p>
     <p>Bikes Currently Available: {{ data.available }}</p>
-    <p>Total Trips: {{ data.trips }} since {{data.first_day | short_date_string }}</p>
+    <p>Total Trips: {{ "{:,}".format(data.trips) }} since {{data.first_day | short_date_string }}</p>
     <p class="caption" style="font-style:italic;font-size:90%;margin-top:10pt;">&loz; Unique bikes active on system in last 2 days.</p>
 </div>
 
