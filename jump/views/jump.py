@@ -3,7 +3,7 @@ from flask import request, session, g, redirect, url_for, abort, \
 from users.admin import login_required, table_access_required, silent_login
 from jump.models import Bike, Sighting, Trip
 from datetime import timedelta
-from date_utils import local_datetime_now
+from date_utils import local_datetime_now, getDatetimeFromString
 
 mod = Blueprint('jump',__name__, template_folder='../templates', url_prefix='/jump')
 
@@ -39,16 +39,24 @@ def make_data_dict(data=None):
     data['trips'] = get_result_count(g.db.execute('select id from trip').fetchall())
     data['available'] = 0
     data['retrieval_date'] = 'Unknown'
+    data['first_day'] = None
     
     sql = """select count(jump_bike_id) as avail, retrieved from sighting
                 group by retrieved
                 order by retrieved desc
                 limit 1
             """
+            
     rec = g.db.execute(sql).fetchall()
     if rec and len(rec) > 0:
         data['available'] = rec[0]['avail']
         data['retrieval_date'] = str(rec[0]['retrieved'])[:16]
+        
+    # Get date data collection started
+    rec = g.db.execute("select min(retrieved) as first_day from sighting").fetchone()
+    if rec:
+        data['first_day'] = getDatetimeFromString(rec['first_day'])
+        
     return data
     
     
