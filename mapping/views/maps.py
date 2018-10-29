@@ -3,7 +3,8 @@ from flask import g, redirect, url_for, \
      render_template, flash, Blueprint, request
 from users.utils import printException
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
+from date_utils import getDatetimeFromString, local_datetime_now
 
 mod = Blueprint('maps', __name__,template_folder='../templates', url_prefix='/map')
 
@@ -18,7 +19,7 @@ def time_lapse_map():
     """
     setExits()
     days = 1
-    start_date = datetime.now() + timedelta(days=-1) # Always starts at midnight, yesterday
+    start_date = local_datetime_now() + timedelta(days=-1) # Always starts at midnight, yesterday
     start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_date = start_date + timedelta(days=days,seconds=-1) 
     
@@ -50,7 +51,6 @@ def time_lapse_map():
                 set opacity to 0
         """
         
-        fmt = '%Y-%m-%d %H:%M:%S'
         total_seconds = int(round((end_date - start_date).total_seconds(),0))
         markerData["zoomToFit"] = True
         markerData['total_seconds'] = total_seconds
@@ -59,12 +59,12 @@ def time_lapse_map():
         
         #import pdb;pdb.set_trace()
         for rec in recs:
-            sighted_dt = datetime.strptime(rec['sighted'][:19],fmt)
+            sighted_dt = getDatetimeFromString(rec['sighted'])
             if sighted_dt.day == 17:
                 #import pdb;pdb.set_trace()
                 pass
             #print('sighted_dt: {}'.format(sighted_dt))
-            retrieved_dt = datetime.strptime(rec['retrieved'][:19],fmt)
+            retrieved_dt = getDatetimeFromString(rec['retrieved'])
             #print('retrieved_dt: {}'.format(retrieved_dt))
             markerData["markers"].append([round(rec['lng'],5),
                                         round(rec['lat'],5),
@@ -72,10 +72,6 @@ def time_lapse_map():
                                         int(round((retrieved_dt - start_date).total_seconds(),0)),
                                     ])
                                 
-        #print(markerData)
-        #print(sql)
-        #print('recs = {}'.format(len(recs)))
-    #return('Ok')
     return render_template('JSONmap.html', markerData=markerData,start_date=start_date)
 
 
