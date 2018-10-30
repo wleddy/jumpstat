@@ -53,6 +53,21 @@ def nowString():
     return datetime_as_string()
     
     
+def date_to_string(value,format):
+    """Attempt to return a date string in the format specified
+    value may be a datetime or a 'date like' string"""
+        
+    if value and format:
+        if type(value) is datetime:
+            return value.strftime(format)
+        if type(value) is str:
+            # convert the string to a date first then back.
+            return getDatetimeFromString(value).strftime(format)
+    
+    #default - return unchanged
+    return value
+
+    
 def datetime_as_string(the_datetime=None):
     """Return a string version of the datetime provided or for now"""
     if the_datetime == None:
