@@ -50,7 +50,7 @@ def get_time_zone_setting():
     
 def nowString():
     """Return the timestamp string in the normal format"""
-    return datetime_as_string()
+    return datetime_as_string(local_datetime_now())
     
     
 def date_to_string(value,format):
@@ -62,7 +62,9 @@ def date_to_string(value,format):
             return value.strftime(format)
         if type(value) is str:
             # convert the string to a date first then back.
-            return getDatetimeFromString(value).strftime(format)
+            temp_date = getDatetimeFromString(value)
+            if temp_date:
+                return temp_date.strftime(format)
     
     #default - return unchanged
     return value
