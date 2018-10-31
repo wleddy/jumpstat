@@ -94,7 +94,7 @@ def get_report_data():
     for x in range(0,2):
         #import pdb;pdb.set_trace()
         network_wide_bikes_available = 0
-        now = local_datetime_now().replace(month=local_datetime_now().month - x)
+        now = local_datetime_now() - timedelta(hours=x*24)
         dr = calendar.monthrange(now.year,now.month) # -> `(first day_number, number of last day)`
         start_date = now.replace(day=1)
         month_name = start_date.strftime('%B %Y') # Month Name / Year
