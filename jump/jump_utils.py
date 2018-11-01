@@ -3,7 +3,7 @@ Some utility functions for jump
 """
 
 from datetime import datetime, timedelta
-from date_utils import local_datetime_now
+from takeabeltof.date_utils import local_datetime_now
 from math import radians, cos, sin, asin, sqrt
 
 def long_time_no_see(previous_date,newer_date=None):

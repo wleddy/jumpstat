@@ -3,7 +3,7 @@ from flask import request, session, g, redirect, url_for, abort, \
 from users.admin import login_required, table_access_required, silent_login
 from jump.models import Bike, Sighting, Trip
 from datetime import timedelta
-from date_utils import local_datetime_now, getDatetimeFromString
+from takeabeltof.date_utils import local_datetime_now, getDatetimeFromString
 
 mod = Blueprint('jump',__name__, template_folder='../templates', url_prefix='/jump')
 

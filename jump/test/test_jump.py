@@ -54,16 +54,16 @@ def test_get_data(client):
             assert b'Login Required' in result.data
             assert 'user' not in session
             
-            assert 'actual get data fetch not run...' == True
             
-            #result = c.post('/jump/get_data/', data={'username': 'admin', 'password': 'password'},follow_redirects=True)
-            #assert result.status == '200 OK'
-            #assert b'Login Required' not in result.data
-            #assert session['user'] == 'admin'
-            #assert b'error' not in result.data.lower()
-            #assert b'New Data added' in result.data
+            result = c.post('/jump/get_data/', data={'username': 'admin', 'password': 'password'},follow_redirects=True)
+            assert result.status == '200 OK'
+            assert b'Login Required' not in result.data
+            assert session['user'] == 'admin'
+            assert b'error' not in result.data.lower()
+            assert b'Jump Data Fetch Complete' in result.data
         
             #Now should be able to work without password
+            # Just clean up the user session
             result = c.get('/logout/',follow_redirects=True)   
             assert result.status_code == 200
             assert 'user' not in session

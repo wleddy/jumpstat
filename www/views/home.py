@@ -2,11 +2,11 @@ from flask import request, session, g, redirect, url_for, abort, \
      render_template, flash, Blueprint, Response
 from users.admin import login_required, table_access_required
 from users.models import Pref
-from users.utils import render_markdown_for
+from takeabeltof.utils import render_markdown_for
 from jump.models import Sighting, Trip, Bike
 from jump.views import jump, hourly_graph
 from datetime import timedelta
-from date_utils import local_datetime_now, datetime_as_string
+from takeabeltof.date_utils import local_datetime_now, datetime_as_string
 import calendar
 from statistics import median
 
@@ -44,7 +44,7 @@ def contact():
     setExits()
     g.name = 'Contact Us'
     from app import app
-    from users.mailer import send_message
+    from takeabeltof.mailer import send_message
     rendered_html = render_markdown_for(__file__,mod,'contact.md')
     show_form = True
     context = {}

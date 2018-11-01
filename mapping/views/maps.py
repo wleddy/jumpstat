@@ -1,10 +1,10 @@
 ## Map view of trips
 from flask import g, redirect, url_for, \
      render_template, flash, Blueprint, request
-from users.utils import printException
+from takeabeltof.utils import printException
 import json
 from datetime import timedelta
-from date_utils import getDatetimeFromString, local_datetime_now
+from takeabeltof.date_utils import getDatetimeFromString, local_datetime_now
 
 mod = Blueprint('maps', __name__,template_folder='../templates', url_prefix='/map')
 

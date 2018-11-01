@@ -1,6 +1,6 @@
 from flask import request, session, g, redirect, url_for, abort, \
      render_template, flash, Blueprint, Response
-from users.utils import render_markdown_for
+from takeabeltof.utils import render_markdown_for
 
 mod = Blueprint('docs',__name__, template_folder='../templates/docs', url_prefix='/docs')
 

@@ -7,11 +7,11 @@ sys.path.append(working_path) ##get import to look one level up
 import requests
 import json
 from datetime import datetime, timedelta
-from date_utils import local_datetime_now
+from takeabeltof.date_utils import local_datetime_now
 from app import app
 from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from jump.jump_utils import long_time_no_see, miles_traveled
-from users.utils import printException
+from takeabeltof.utils import printException
 import ast
 from shapely.geometry import Point, shape
 from mapping.shapes import get_shape_list
@@ -54,7 +54,7 @@ def run():
 def get_jump_data():
     try:
         mes = 'No message Yet...'
-        from users.database import Database
+        from takeabeltof.database import Database
         db = Database(working_path + "/" + app.config['DATABASE_PATH']).connect()
         init_tables(db) # creates tables if needed
 
@@ -207,7 +207,7 @@ def get_jump_data():
         
 def alert_admin(mes):
     with app.app_context():
-        from users.mailer import send_message
+        from takeabeltof.mailer import send_message
         # send an email to admin
         sent,msg = send_message(
             None,

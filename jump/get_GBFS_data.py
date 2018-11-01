@@ -6,7 +6,7 @@
 from app import app
 import ast
 from datetime import datetime
-from date_utils import local_datetime_now, make_tz_aware
+from takeabeltof.date_utils import local_datetime_now, make_tz_aware
 from flask import g
 import json
 from jump.jump_utils import long_time_no_see, miles_traveled
@@ -14,7 +14,7 @@ from jump.models import Bike, Sighting, Trip, AvailableBikeCount, init_tables
 from mapping.shapes import get_shape_list
 import requests
 from shapely.geometry import Point, shape
-from users.utils import printException
+from takeabeltof.utils import printException
 from www.views.home import render_home_page_to_cache
 
 def get_gbfs_data():
@@ -210,7 +210,7 @@ def get_gbfs_data():
 
 def alert_admin(mes):
     with app.app_context():
-        from users.mailer import send_message
+        from takeabeltof.mailer import send_message
         # send an email to admin
         sent,msg = send_message(
             None,
