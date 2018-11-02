@@ -299,6 +299,7 @@ def get_city(lng,lat,shapes_list=None):
     if not city:
         #attempt geocode lookup
         url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={}&lon={}&zoom=18&addressdetails=1".format(lat,lng,)
+        geo_data = "Data Not Retrieved Yet"
         try:
             geo_data = requests.get(url).text
             #convert data from json
