@@ -53,16 +53,16 @@ def get_gbfs_data():
             request_data = json.loads(raw_data)
         except:
             # alert on conversion error
-            mes = """An error occured while attempting to convert json data.
+            mes = """An error occured while attempting to convert json data in "get_gbfs_data()".
                 Time: {}
-                Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
+                Error: {}""".format(local_datetime_now().isoformat(),raw_data)
             alert_admin(mes)
             
             return mes
         
         #Are there any bikes?
         if not request_data['data']['bikes']:
-            mes = """No bikes were retrievd.
+            mes = """No bikes were retrievd in "get_gbfs_data()" step 2.
                 Time: {}
                 Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
@@ -201,7 +201,7 @@ def get_gbfs_data():
         except:
             mes_data_response = "No Data Retrieved"
             
-        mes = """An error occured while attempting to fetch bike data.
+        mes = """An un-caught error occured while attempting to fetch bike data.
                 Error: {}
                 
                 Data Retrived: {}
@@ -332,7 +332,7 @@ def get_free_bike_url():
     url = app.config['JUMP_GBFS_ROOT_URL']
     request_data = requests.get(url).text
     if "error" in request_data or '"feeds":' not in request_data: # Not sure what an error looks like
-        mes = """An error occured while attempting to import Jump Bike feed from {}.
+        mes = """An error occured while attempting to import Jump Bike feed from {} in "get_free_bike_url()".
             Time: {}
             Error: {}""".format(url,local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
@@ -344,7 +344,7 @@ def get_free_bike_url():
         request_data = json.loads(request_data)
     except:
         # alert on conversion error
-        mes = """An error occured while attempting to convert json data.
+        mes = """An error occured while attempting to convert json data in "get_free_bike_url() step 2".
             Time: {}
             Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
@@ -361,7 +361,7 @@ def get_free_bike_url():
     if url:
         return url
     else:
-        mes = """No valid feeds were retrievd.
+        mes = """No valid feeds were retrievd in "get_free_bike_url()" step 3.
             Time: {}
             Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
         alert_admin(mes)
