@@ -67,7 +67,7 @@ def get_gbfs_data():
                 Error: {}""".format(local_datetime_now().isoformat(),str(request_data))
             alert_admin(mes)
             
-            return mes
+            return mes3
             
         #got data!
         observations = request_data['data']['bikes']
@@ -80,7 +80,10 @@ def get_gbfs_data():
         avail_city_data = {}
     
         for ob in observations:
-            
+            # Jump added a new property for vehicle type. We are only interested in bikes
+            if ob.get("jump_vehicle_type","bike") != "bike":
+                continue # go to the next obserbation
+                
             lng = ob['lon']
             lat = ob['lat']
             ob['retrieved'] = retrieval_dt
