@@ -8,7 +8,10 @@ git pull origin master
 cd ../users/
 git pull origin master
 
+cd ../news/
+git pull origin master
+
 cd ../
-ECHO 'All Done'
+echo 'All Done'
 
 
