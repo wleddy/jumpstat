@@ -53,7 +53,7 @@ a, .script-link, .cancel-link
 {
 text-decoration:underline;
 cursor:pointer;
-color:rgb(65,ff,65);
+color:rgb(65,65,254);
 }
 .no-decoration {
 	text-decoration:none;
