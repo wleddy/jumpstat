@@ -1,11 +1,12 @@
 ## Data Dictionary
 
-The Data dictionary for jumpstat as of Oct. 1, 2018:
+The Data dictionary for jumpstat as of Dec. 24, 2018:
 
 * **Bike** Table
     * **id** INT:
     * **jump_bike_id** NUMBER: Jump Bike's internal id
     * **name** TEXT: The number displayed on the bike as reported by the API
+    * **vehicle_type** TEXT: The type of vehicle. Currently only 'bike' but expect 'scooter' too.
 
  
 * **Sighting** Table  
@@ -32,6 +33,7 @@ The location information returned by the API plus some we add
         * The assumption is that the bike was off network being serviced or recharged
     * **sighted** DATETIME: The datatime we first see the bike at this location.
     * **bonuses** TEXT: JSON text of any bonuses that Jump has offered on this bike at the time of sighting
+    * **vehicle_type** TEXT: The type of vehicle sighted. Currently only 'bike' but expect 'scooter' too.
     
  
 * **Trip** Table
