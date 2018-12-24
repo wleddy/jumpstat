@@ -82,7 +82,7 @@ def get_gbfs_data():
         for ob in observations:
             # Jump added a new property for vehicle type. We are only interested in bikes
             if ob.get("jump_vehicle_type","bike") != "bike":
-                continue # go to the next obserbation
+                pass # will need to look back at this when scooters arrive
                 
             lng = ob['lon']
             lat = ob['lat']
@@ -122,6 +122,7 @@ def get_gbfs_data():
                 bike = bikes.new()
                 bike.jump_bike_id = ob['bike_id']
                 bike.name = ob.get('name',None)
+                bike.vehicle_type = ob.get("jump_vehicle_type",None)
                 bikes.save(bike)
                 new_data['bike'] += 1
                 sightings.save(new_sighting(sightings,ob,shapes_list))
@@ -243,7 +244,7 @@ def new_sighting(sightings,data,shapes_list,**kwargs):
     rec.returned_to_service = returned_to_service
     rec.city = get_city(rec.lng,rec.lat,shapes_list)
     rec.batt_level = data.get('jump_ebike_battery_level',None)
-    #rec.batt_distance = data.get('ebike_battery_distance',None)
+    rec.vehicle_type = data.get('jump_vehicle_type',None)
     #rec.hub_id = data.get('hub_id',None)
     rec.day_number = day_number()
     

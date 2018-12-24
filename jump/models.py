@@ -13,7 +13,8 @@ class Bike(SqliteTable):
         
         sql = """
             jump_bike_id NUMBER,
-            name TEXT
+            name TEXT,
+            vehicle_type TEXT
             """
         super().create_table(sql)
         
@@ -47,7 +48,8 @@ class Sighting(SqliteTable):
             day_number NUMBER,
             returned_to_service INT DEFAULT 0,
             sighted DATETIME,
-            bonuses TEXT
+            bonuses TEXT,
+            vehicle_type TEXT
             """
         super().create_table(sql)
         
