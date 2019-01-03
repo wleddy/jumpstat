@@ -78,12 +78,22 @@ def get_gbfs_data():
         trips = Trip(db)
         new_data = {'sighting':0, 'bike': 0, 'trip': 0, 'available': 0,}
         avail_city_data = {}
-    
+        
+        # Temporary to only send email once per retireval
+        found_a_different_vehicle = ''
+        
         for ob in observations:
             # Jump added a new property for vehicle type. We are only interested in bikes
             if ob.get("jump_vehicle_type","bike") != "bike":
-                pass # will need to look back at this when scooters arrive
-                
+                # Alert me when we see a vehicle type I don't recognize
+                temp_veh = ob.get("jump_vehicle_type","None")
+                if found_a_different_vehicle != temp_veh:
+                    found_a_scooter = temp_veh
+                    mes = """Received response with vehicle type of {}
+                        Time: {}""".format(temp_veh,local_datetime_now().isoformat())
+                    alert_admin(mes)
+                    
+                    
             lng = ob['lon']
             lat = ob['lat']
             ob['retrieved'] = retrieval_dt
