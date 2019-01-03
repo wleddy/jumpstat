@@ -88,9 +88,8 @@ def get_gbfs_data():
                 # Alert me when we see a vehicle type I don't recognize
                 temp_veh = ob.get("jump_vehicle_type","None")
                 if found_a_different_vehicle != temp_veh:
-                    found_a_scooter = temp_veh
-                    mes = """Received response with vehicle type of {}
-                        Time: {}""".format(temp_veh,local_datetime_now().isoformat())
+                    found_a_different_vehicle = temp_veh
+                    mes = """Received response with vehicle type of '{}'. Time: {}""".format(temp_veh,local_datetime_now().isoformat())
                     alert_admin(mes)
                     
                     
