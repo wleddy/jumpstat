@@ -89,7 +89,10 @@ def get_gbfs_data():
                 temp_veh = ob.get("jump_vehicle_type","None")
                 if found_a_different_vehicle != temp_veh:
                     found_a_different_vehicle = temp_veh
-                    mes = """Received response with vehicle type of '{}'. Time: {}""".format(temp_veh,local_datetime_now().isoformat())
+                    mes = """Received response with vehicle type of '{}'. Time: {}
+Data: 
+{}
+""".format(temp_veh,local_datetime_now().isoformat(),ob)
                     alert_admin(mes)
                     
                     
